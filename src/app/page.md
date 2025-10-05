@@ -1,112 +1,170 @@
 ---
-title: Product Manager APP Documentation
+title: Products Manager APP - Documentation
+nextjs:
+  metadata:
+    title: Documentation - Products Manager APP
+    description: Documentation complète pour Products Manager APP - Centralisez vos imports, enrichissez avec l'IA, et optimisez votre e-commerce.
 ---
 
-Welcome to Product Manager APP - your comprehensive platform for **centralizing supplier imports**, **AI-powered product enrichment**, and **e-commerce intelligence**. {% .lead %}
+Bienvenue dans la documentation **Products Manager APP** - votre plateforme tout-en-un pour **centraliser les imports fournisseurs**, **enrichir vos produits avec l'IA**, et **optimiser votre gestion e-commerce**. {% .lead %}
 
 {% quick-links %}
 
-{% quick-link title="Quick Start" icon="installation" href="/docs/getting-started/quick-start" description="Get up and running with Product Manager APP in minutes." /%}
+{% quick-link title="Démarrage Rapide" icon="installation" href="/docs/getting-started/quick-start" description="Commencez en 10 minutes avec notre guide pas-à-pas." /%}
 
-{% quick-link title="Core Features" icon="presets" href="/docs/features/import-centralisation" description="Discover centralized imports, AI enrichment, EAN manager, and more." /%}
+{% quick-link title="Fonctionnalités" icon="presets" href="/docs/features/import-centralisation" description="Découvrez les imports centralisés, l'enrichissement IA, le gestionnaire EAN, et plus." /%}
 
-{% quick-link title="API Reference" icon="plugins" href="/docs/api/authentication" description="Complete API documentation with authentication, endpoints, and webhooks." /%}
+{% quick-link title="API Reference" icon="plugins" href="/docs/api/authentication" description="Documentation API complète avec authentification, endpoints, et webhooks." /%}
 
-{% quick-link title="Integrations" icon="theming" href="/docs/integrations/odoo" description="Connect to Odoo, Shopify, PrestaShop, WooCommerce, and more." /%}
+{% quick-link title="Intégrations" icon="theming" href="/docs/integrations/odoo" description="Connectez-vous à Odoo, Shopify, PrestaShop, WooCommerce, et plus." /%}
 
 {% /quick-links %}
 
-Product Manager APP is an **all-in-one solution** for e-commerce businesses to streamline product data management. The platform centralizes data from multiple suppliers, enriches products using AI, manages EAN codes, and provides market intelligence—all in one place.
+---
+
+## Qu'est-ce que Products Manager APP ?
+
+Products Manager APP est une **solution SaaS** conçue pour les e-commerçants qui souhaitent **automatiser** et **optimiser** la gestion de leurs données produits.
+
+### 🎯 Problèmes Résolus
+
+- **Imports manuels chronophages** → Automatisation complète des imports fournisseurs
+- **Fiches produits incomplètes** → Enrichissement IA avec descriptions et attributs SEO
+- **Gestion multi-fournisseurs complexe** → Centralisation et normalisation des données
+- **Prix non compétitifs** → Veille concurrentielle sur +16 plateformes e-commerce
+- **Codes EAN manquants** → Recherche automatique via Amazon Product Advertising API
+
+### 📊 Métriques Système (v3.3.0)
+
+- **Health Score**: 83/100 (A-)
+- **Test Coverage**: 78% (6,842 tests)
+- **Performance**: API p95 < 370ms
+- **Security**: 0 CVE critiques
+- **RBAC**: 93.4% endpoints protégés
 
 ---
 
-## What is Product Manager APP?
+## Fonctionnalités Principales
 
-Product Manager APP helps e-commerce businesses manage product data efficiently by automating imports, enriching content with AI, and synchronizing with multiple platforms.
+### 🔄 Centralisation des Imports
 
-### Installing dependencies
+Connectez tous vos fournisseurs en un seul endroit :
 
-Sit commodi iste iure molestias qui amet voluptatem sed quaerat. Nostrum aut pariatur. Sint ipsa praesentium dolor error cumque velit tenetur quaerat exercitationem. Consequatur et cum atque mollitia qui quia necessitatibus.
+- **Formats supportés**: Excel, CSV, XML, JSON
+- **Sources**: Upload manuel, FTP/SFTP, HTTP, API REST
+- **Planification**: Quotidien, hebdomadaire, temps réel
+- **Validation**: Règles métier configurables
 
-```shell
-npm install @tailwindlabs/cache-advance
-```
+[En savoir plus →](/docs/features/import-centralisation)
 
-Possimus saepe veritatis sint nobis et quam eos. Architecto consequatur odit perferendis fuga eveniet possimus rerum cumque. Ea deleniti voluptatum deserunt voluptatibus ut non iste. Provident nam asperiores vel laboriosam omnis ducimus enim nesciunt quaerat. Minus tempora cupiditate est quod.
+### 🤖 Enrichissement IA
 
-{% callout type="warning" title="Oh no! Something bad happened!" %}
-This is what a disclaimer message looks like. You might want to include inline `code` in it. Or maybe you’ll want to include a [link](/) in it. I don’t think we should get too carried away with other scenarios like lists or tables — that would be silly.
-{% /callout %}
+Générez automatiquement du contenu optimisé :
 
-### Configuring the library
+- **Descriptions produits** marketing et SEO
+- **Titres optimisés** avec mots-clés
+- **Extraction d'attributs** (couleur, taille, matière)
+- **Traduction** multi-langues
 
-Sit commodi iste iure molestias qui amet voluptatem sed quaerat. Nostrum aut pariatur. Sint ipsa praesentium dolor error cumque velit tenetur quaerat exercitationem. Consequatur et cum atque mollitia qui quia necessitatibus.
+**Modèles supportés**: GPT-4o, GPT-4-turbo, Claude 3.5 Sonnet
 
-```js
-// cache-advance.config.js
-export default {
-  strategy: 'predictive',
-  engine: {
-    cpus: 12,
-    backups: ['./storage/cache.wtf'],
-  },
-}
-```
+[En savoir plus →](/docs/features/ai-enrichment)
 
-Possimus saepe veritatis sint nobis et quam eos. Architecto consequatur odit perferendis fuga eveniet possimus rerum cumque. Ea deleniti voluptatum deserunt voluptatibus ut non iste. Provident nam asperiores vel laboriosam omnis ducimus enim nesciunt quaerat. Minus tempora cupiditate est quod.
+### 🏷️ Gestionnaire EAN
 
-{% callout title="You should know!" %}
-This is what a disclaimer message looks like. You might want to include inline `code` in it. Or maybe you’ll want to include a [link](/) in it. I don’t think we should get too carried away with other scenarios like lists or tables — that would be silly.
-{% /callout %}
+Trouvez et associez les codes-barres EAN/UPC/ASIN :
 
----
+- **Recherche Amazon** via Product Advertising API
+- **Cache intelligent** pour réduire les coûts
+- **Matching automatique** sur références fournisseurs
+- **Export codes** pour marketplace
 
-## Basic usage
+[En savoir plus →](/docs/features/ean-manager)
 
-Praesentium laudantium magni. Consequatur reiciendis aliquid nihil iusto ut in et. Quisquam ut et aliquid occaecati. Culpa veniam aut et voluptates amet perspiciatis. Qui exercitationem in qui. Vel qui dignissimos sit quae distinctio.
+### 📈 Market Intelligence
 
-### Your first cache
+Surveillez vos concurrents en temps réel :
 
-Minima vel non iste debitis. Consequatur repudiandae et quod accusamus sit molestias consequatur aperiam. Et sequi ipsa eum voluptatibus ipsam. Et quisquam ut.
+- **16+ plateformes** surveillées (Amazon, Fnac, Darty, Boulanger...)
+- **Alertes prix** par email/SMS
+- **Calcul de marges** automatique
+- **Rapports PDF/Excel** personnalisables
 
-Qui quae esse aspernatur fugit possimus. Quam sed molestiae temporibus. Eum perferendis dignissimos provident ea et. Et repudiandae quasi accusamus consequatur dolore nobis. Quia reiciendis necessitatibus a blanditiis iste quia. Ut quis et amet praesentium sapiente.
-
-Atque eos laudantium. Optio odit aspernatur consequuntur corporis soluta quidem sunt aut doloribus. Laudantium assumenda commodi.
-
-### Clearing the cache
-
-Vel aut velit sit dolor aut suscipit at veritatis voluptas. Laudantium tempore praesentium. Qui ut voluptatem.
-
-Ea est autem fugiat velit esse a alias earum. Dolore non amet soluta eos libero est. Consequatur qui aliquam qui odit eligendi ut impedit illo dignissimos.
-
-Ut dolore qui aut nam. Natus temporibus nisi voluptatum labore est ex error vel officia. Vero repellendus ut. Suscipit voluptate et placeat. Eius quo corporis ab et consequatur quisquam. Nihil officia facere dolorem occaecati alias deleniti deleniti in.
-
-### Adding middleware
-
-Officia nobis tempora maiores id iusto magni reprehenderit velit. Quae dolores inventore molestiae perspiciatis aut. Quis sequi officia quasi rem officiis officiis. Nesciunt ut cupiditate. Sunt aliquid explicabo enim ipsa eum recusandae. Vitae sunt eligendi et non beatae minima aut.
-
-Harum perferendis aut qui quibusdam tempore laboriosam voluptatum qui sed. Amet error amet totam exercitationem aut corporis accusantium dolorum. Perspiciatis aut animi et. Sed unde error ut aut rerum.
-
-Ut quo libero aperiam mollitia est repudiandae quaerat corrupti explicabo. Voluptas accusantium sed et doloribus voluptatem fugiat a mollitia. Numquam est magnam dolorem asperiores fugiat. Soluta et fuga amet alias temporibus quasi velit. Laudantium voluptatum perspiciatis doloribus quasi facere. Eveniet deleniti veniam et quia veritatis minus veniam perspiciatis.
+[En savoir plus →](/docs/features/market-intelligence)
 
 ---
 
-## Getting help
+## Intégrations E-commerce
 
-Consequuntur et aut quisquam et qui consequatur eligendi. Necessitatibus dolorem sit. Excepturi cumque quibusdam soluta ullam rerum voluptatibus. Porro illo sequi consequatur nisi numquam nisi autem. Ut necessitatibus aut. Veniam ipsa voluptatem sed.
+Synchronisez vos données avec vos outils existants :
 
-### Submit an issue
+| Plateforme | Type | Statut |
+|------------|------|--------|
+| **Odoo** | ERP | ✅ Production |
+| **Shopify** | E-commerce | ✅ Production |
+| **PrestaShop** | E-commerce | ✅ Production |
+| **WooCommerce** | E-commerce | ✅ Production |
+| **API REST** | Custom | ✅ Production |
 
-Inventore et aut minus ut voluptatem nihil commodi doloribus consequatur. Facilis perferendis nihil sit aut aspernatur iure ut dolores et. Aspernatur odit dignissimos. Aut qui est sint sint.
+[Voir toutes les intégrations →](/docs/integrations/odoo)
 
-Facere aliquam qui. Dolorem officia ipsam adipisci qui molestiae. Error voluptatem reprehenderit ex.
+---
 
-Consequatur enim quia maiores aperiam et ipsum dicta. Quam ut sit facere sit quae. Eligendi veritatis aut ut veritatis iste ut adipisci illo.
+## Stack Technique
 
-### Join the community
+Products Manager APP v3.3.0 utilise une architecture moderne et scalable :
 
-Praesentium facilis iste aliquid quo quia a excepturi. Fuga reprehenderit illo sequi voluptatem voluptatem omnis. Id quia consequatur rerum consectetur eligendi et omnis. Voluptates iusto labore possimus provident praesentium id vel harum quisquam. Voluptatem provident corrupti.
+**Backend**:
+- FastAPI (Python 3.11)
+- PostgreSQL multi-DB (5 bases de données)
+- Redis (cache + Celery)
+- MinIO (stockage S3-compatible)
+- Celery + Beat (tâches asynchrones)
 
-Eum et ut. Qui facilis est ipsa. Non facere quia sequi commodi autem. Dicta autem sit sequi omnis impedit. Eligendi amet dolorum magnam repudiandae in a.
+**Frontend**:
+- Next.js 15 + React 19
+- Tailwind CSS 4
+- TypeScript
+- SWR (data fetching)
 
-Molestiae iusto ut exercitationem dolorem unde iusto tempora atque nihil. Voluptatem velit facere laboriosam nobis ea. Consequatur rerum velit ipsum ipsam. Et qui saepe consequatur minima laborum tempore voluptatum et. Quia eveniet eaque sequi consequatur nihil eos.
+**Infrastructure**:
+- Docker + Docker Compose
+- Coolify (déploiement)
+- Let's Encrypt (SSL)
+- Traefik (reverse proxy)
+
+[Architecture détaillée →](/docs/technical/architecture)
+
+---
+
+## Démarrer Maintenant
+
+### Pour les Utilisateurs
+
+{% quick-links %}
+
+{% quick-link title="Introduction" icon="installation" href="/docs/getting-started/introduction" description="Découvrez Products Manager APP et ses avantages." /%}
+
+{% quick-link title="Guide Utilisateur" icon="presets" href="/docs/user-guides/getting-started" description="Apprenez à utiliser l'interface et les fonctionnalités." /%}
+
+{% /quick-links %}
+
+### Pour les Développeurs
+
+{% quick-links %}
+
+{% quick-link title="API Authentication" icon="plugins" href="/docs/api/authentication" description="Authentification JWT et gestion des tokens." /%}
+
+{% quick-link title="Deployment" icon="theming" href="/docs/technical/deployment" description="Déployer Products Manager APP en production." /%}
+
+{% /quick-links %}
+
+---
+
+## Support & Contact
+
+- **Documentation**: [docs.productsmanager.app](https://docs.productsmanager.app)
+- **Application**: [productsmanager.app](https://productsmanager.app)
+- **API**: [api.productsmanager.app](https://api.productsmanager.app)
+- **Email**: webmaster@pixeeplay.com
+- **GitHub**: [Suppliers-Import](https://github.com/pixeeplay/Suppliers-Import)
