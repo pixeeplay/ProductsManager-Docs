@@ -6,7 +6,7 @@ nextjs:
     description: Commencez avec Products Manager APP en moins de 10 minutes.
 ---
 
-Commencez avec Products Manager APP en moins de **10 minutes**. Ce guide vous accompagne de la création de compte à votre premier import. {% .lead %}
+Commencez avec Products Manager APP en moins de **10 minutes**. Ce guide vous accompagne de la création de compte à votre premier import.
 
 ---
 
@@ -14,37 +14,21 @@ Commencez avec Products Manager APP en moins de **10 minutes**. Ce guide vous ac
 
 Avant de commencer, assurez-vous d'avoir :
 
-- Un **navigateur moderne** (Chrome, Firefox, Safari, Edge)
-- Un **compte utilisateur** Products Manager APP
-- Un **fichier fournisseur** (Excel, CSV) ou accès FTP/API
+- Un navigateur moderne (Chrome, Firefox, Safari, Edge)
+- Un compte utilisateur Products Manager APP
+- Un fichier fournisseur (Excel, CSV) ou accès FTP/API
 
-{% callout type="warning" title="Compte démo disponible" %}
-Vous n'avez pas encore de compte ? Contactez **webmaster@pixeeplay.com** pour obtenir un accès démo gratuit.
-{% /callout %}
+> **Note** : Vous n'avez pas encore de compte ? Contactez webmaster@pixeeplay.com pour obtenir un accès démo gratuit.
 
 ---
 
 ## Étape 1 : Connexion
 
-### Accédez à l'application
-
-Rendez-vous sur **[productsmanager.app](https://productsmanager.app)** et connectez-vous avec vos identifiants.
-
-```
-URL: https://productsmanager.app
-Email: votre@email.com
-Mot de passe: ********
-```
-
-### Première connexion
-
-Au premier login, vous serez redirigé vers le **tableau de bord** principal.
+Rendez-vous sur [productsmanager.app](https://productsmanager.app) et connectez-vous avec vos identifiants.
 
 ---
 
 ## Étape 2 : Configurer un Fournisseur
-
-### Créer un nouveau fournisseur
 
 1. Allez dans **Fournisseurs** → **Nouveau Fournisseur**
 2. Renseignez les informations :
@@ -69,42 +53,30 @@ Associez les colonnes de votre fichier fournisseur aux champs Products Manager :
 
 ## Étape 3 : Premier Import
 
-### Uploader un fichier
-
 1. Allez dans **Imports** → **Nouvel Import**
 2. Sélectionnez votre fournisseur
 3. **Uploadez** votre fichier Excel/CSV (max 50 MB)
 4. Cliquez sur **Lancer l'Import**
 
-### Suivre l'import
-
 L'import se déroule en **4 phases** :
 
-```
-1. ⬆️  Upload du fichier (5-10 sec)
-2. 🔍 Validation des données (10-30 sec)
-3. 💾 Insertion en base (30-60 sec)
-4. ✅ Finalisation (5 sec)
-```
+1. Upload du fichier (5-10 sec)
+2. Validation des données (10-30 sec)
+3. Insertion en base (30-60 sec)
+4. Finalisation (5 sec)
 
-{% callout type="note" title="Traitement asynchrone" %}
-Les imports s'exécutent en tâche de fond. Vous pouvez continuer à utiliser l'application pendant le traitement.
-{% /callout %}
+> **Note** : Les imports s'exécutent en tâche de fond. Vous pouvez continuer à utiliser l'application pendant le traitement.
 
 ---
 
 ## Étape 4 : Enrichissement IA (Optionnel)
 
-### Activer l'enrichissement automatique
-
 1. Allez dans **Paramètres** → **Enrichissement IA**
 2. Activez les options :
-   - ✅ Génération de descriptions
-   - ✅ Optimisation SEO des titres
-   - ✅ Extraction d'attributs
+   - Génération de descriptions
+   - Optimisation SEO des titres
+   - Extraction d'attributs
 3. Sélectionnez le modèle IA (GPT-4o recommandé)
-
-### Lancer l'enrichissement
 
 Sur vos produits importés :
 
@@ -115,8 +87,6 @@ Sur vos produits importés :
 ---
 
 ## Étape 5 : Export vers votre E-commerce
-
-### Connecter votre plateforme
 
 Products Manager APP s'intègre avec :
 
@@ -140,10 +110,10 @@ Products Manager APP s'intègre avec :
 
 Après ces 5 étapes, vous avez :
 
-- ✅ Un fournisseur configuré
-- ✅ Vos premiers produits importés
-- ✅ Des fiches enrichies avec l'IA
-- ✅ Une synchronisation active vers votre e-commerce
+- ✓ Un fournisseur configuré
+- ✓ Vos premiers produits importés
+- ✓ Des fiches enrichies avec l'IA
+- ✓ Une synchronisation active vers votre e-commerce
 
 **Temps total : ~10 minutes**
 
@@ -151,22 +121,15 @@ Après ces 5 étapes, vous avez :
 
 ## Prochaines Étapes
 
-{% quick-links %}
-
-{% quick-link title="Guide Complet" icon="installation" href="/docs/user-guides/getting-started" description="Explorez toutes les fonctionnalités en détail." /%}
-
-{% quick-link title="Workflow d'Import" icon="presets" href="/docs/user-guides/import-workflow" description="Maîtrisez les imports avancés (FTP, API, planification)." /%}
-
-{% quick-link title="Enrichissement IA" icon="plugins" href="/docs/features/ai-enrichment" description="Optimisez vos contenus avec l'intelligence artificielle." /%}
-
-{% quick-link title="API Documentation" icon="theming" href="/docs/api/authentication" description="Automatisez avec l'API REST." /%}
-
-{% /quick-links %}
+- [Guide Complet](/docs/user-guides/getting-started) - Explorez toutes les fonctionnalités en détail
+- [Workflow d'Import](/docs/user-guides/import-workflow) - Maîtrisez les imports avancés (FTP, API, planification)
+- [Enrichissement IA](/docs/features/ai-enrichment) - Optimisez vos contenus avec l'intelligence artificielle
+- [API Documentation](/docs/api/authentication) - Automatisez avec l'API REST
 
 ---
 
 ## Besoin d'Aide ?
 
-- 📧 **Email**: webmaster@pixeeplay.com
-- 📚 **Documentation**: [docs.productsmanager.app](https://docs.productsmanager.app)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/pixeeplay/Suppliers-Import/issues)
+- **Email**: webmaster@pixeeplay.com
+- **Documentation**: [docs.productsmanager.app](https://docs.productsmanager.app)
+- **GitHub**: [Issues](https://github.com/pixeeplay/Suppliers-Import/issues)
