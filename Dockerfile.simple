@@ -1,0 +1,32 @@
+# Simple single-stage Dockerfile for Coolify
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy source
+COPY . .
+
+# Build arguments
+ARG NEXT_PUBLIC_SITE_URL=https://docs.productsmanager.app
+ARG NEXT_PUBLIC_API_URL=https://api.productsmanager.app
+
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build
+RUN npm run build
+
+# Expose port
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Start
+CMD ["npm", "start"]

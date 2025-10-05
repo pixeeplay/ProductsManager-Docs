@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  # Documentation Site (Next.js)
+  docs:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+      args:
+        - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-https://docs.productsmanager.app}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.productsmanager.app}
+    container_name: docs-productsmanager
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

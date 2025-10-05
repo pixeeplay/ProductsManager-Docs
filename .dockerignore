@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+.gitignore
+README.md
+CHANGELOG.md
+DEPLOYMENT_GUIDE.md
+STRUCTURE_SUMMARY.md
