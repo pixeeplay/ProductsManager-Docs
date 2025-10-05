@@ -57,7 +57,7 @@ export function Hero() {
                 Products Manager APP
               </p>
               <p className="mt-3 text-2xl tracking-tight text-slate-400">
-                Centralisez vos imports fournisseurs, enrichissez avec l'IA et optimisez votre catalogue e-commerce en quelques clics.
+                Centralisez vos imports fournisseurs, enrichissez avec l&apos;IA et optimisez votre catalogue e-commerce en quelques clics.
               </p>
               <div className="mt-8 flex gap-4 md:justify-center lg:justify-start">
                 <Button href="/docs/getting-started/quick-start">Démarrage rapide</Button>
