@@ -219,11 +219,11 @@ Tous les plans incluent des crédits IA mensuels. Plan Starter : 500 crédits/mo
 #### Templates Personnalisés
 
 Créez vos propres prompts IA :
-```
-Génère une description {ton} de {longueur} mots pour ce {categorie}.
-Mets en avant : {usps}.
-Cible : {audience}.
-Inclus ces mots-clés : {keywords}.
+```text
+Génère une description {{ton}} de {{longueur}} mots pour ce {{categorie}}.
+Mets en avant : {{usps}}.
+Cible : {{audience}}.
+Inclus ces mots-clés : {{keywords}}.
 ```
 
 #### Règles Métier

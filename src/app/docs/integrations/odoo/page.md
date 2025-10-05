@@ -107,7 +107,7 @@ Remplissez le formulaire :
 
 Cliquez sur **Tester la connexion**. Vous devriez voir :
 
-```
+```text
 ✅ Connexion réussie
 ✅ Authentification XML-RPC OK
 ✅ Base de données accessible
@@ -389,7 +389,7 @@ Dans Odoo Enterprise, installez le module **Webhooks** depuis les Apps.
 1. Allez dans **Paramètres** → **Technique** → **Automation** → **Webhooks**
 2. Créez un nouveau webhook :
 
-```
+```text
 Nom: Products Manager - Product Update
 Modèle: Product Template (product.template)
 Trigger: On Create, On Update
@@ -401,7 +401,7 @@ Token: <votre_webhook_secret>
 
 ### 3. Créer un webhook pour les stocks
 
-```
+```text
 Nom: Products Manager - Stock Update
 Modèle: Stock Quant (stock.quant)
 Trigger: On Update

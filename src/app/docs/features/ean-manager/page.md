@@ -241,7 +241,7 @@ Optimisez votre cache :
 
 Automatisez la recherche EAN :
 
-```
+```text
 Trigger : Nouveau produit importé
 Condition : EAN vide
 Action : Recherche EAN automatique

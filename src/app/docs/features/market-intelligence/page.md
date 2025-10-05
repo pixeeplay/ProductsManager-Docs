@@ -246,7 +246,7 @@ Exploitez les insights :
 
 Le système associe vos produits aux références concurrentes :
 
-```
+```text
 Votre produit : "Apple iPhone 15 Pro 256GB Titanium"
 EAN : 0195949038864
 
@@ -264,7 +264,7 @@ Validez ou ajustez les matchs proposés.
 
 Définissez des stratégies de prix automatisées :
 
-```
+```text
 SI concurrent_min < mon_prix - 5€
 ET marge > 15%
 ALORS ajuster prix = concurrent_min + 2€

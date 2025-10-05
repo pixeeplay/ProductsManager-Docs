@@ -31,7 +31,7 @@ Vous n'avez pas encore de compte ? Contactez **webmaster@pixeeplay.com** pour ob
 
 Rendez-vous sur l'URL de connexion :
 
-```
+```text
 https://productsmanager.app/login
 ```
 

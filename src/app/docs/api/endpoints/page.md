@@ -12,7 +12,7 @@ L'API Products Manager expose des endpoints REST pour gérer produits, fournisse
 
 ## Base URL
 
-```
+```text
 Production: https://api.productsmanager.app/api/v1
 Staging: https://api-staging.productsmanager.app/api/v1
 ```
@@ -405,7 +405,7 @@ Tous les endpoints paginés retournent une structure standard :
 
 Combinez plusieurs filtres avec `&` :
 
-```
+```text
 GET /products?status=active&supplier_id=42&price_min=10&price_max=100
 ```
 
@@ -413,7 +413,7 @@ GET /products?status=active&supplier_id=42&price_min=10&price_max=100
 
 Utilisez `sort_by` et `order` :
 
-```
+```text
 GET /products?sort_by=price&order=desc
 ```
 
@@ -471,7 +471,7 @@ L'API applique des limites de requêtes pour garantir la stabilité :
 
 Chaque réponse inclut :
 
-```
+```text
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
 X-RateLimit-Reset: 1728134400

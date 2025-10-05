@@ -290,7 +290,7 @@ Pour vérifier que les webhooks proviennent bien de Products Manager, utilisez l
 
 Chaque requête webhook inclut un header `X-Webhook-Signature` :
 
-```
+```text
 X-Webhook-Signature: sha256=abc123def456...
 ```
 

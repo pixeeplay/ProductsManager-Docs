@@ -113,7 +113,7 @@ Remplissez le formulaire :
 
 Cliquez sur **Tester la connexion** :
 
-```
+```text
 ✅ Connexion à maboutique.com réussie
 ✅ Authentification WooCommerce OK
 ✅ API REST v3 détectée

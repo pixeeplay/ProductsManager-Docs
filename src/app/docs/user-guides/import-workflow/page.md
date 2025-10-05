@@ -64,7 +64,7 @@ Sélectionnez le type d'import selon votre source de données :
 
 #### Upload Manuel (CSV/Excel)
 
-```
+```text
 Format : CSV ou Excel
 Taille max : 50 MB
 Encodage : UTF-8, ISO-8859-1, Windows-1252
@@ -73,7 +73,7 @@ Délimiteur CSV : ; (point-virgule), , (virgule), ou | (pipe)
 
 #### FTP/SFTP
 
-```
+```text
 Hôte : ftp.fournisseur.com
 Port : 21 (FTP) ou 22 (SFTP)
 Utilisateur : votre_login
@@ -158,21 +158,21 @@ Products Manager peut appliquer des transformations automatiques :
 
 #### Conversion de Prix
 
-```
+```text
 Format fournisseur : "89,90€"
 Transformation : Extraction numérique → 89.90
 ```
 
 #### Nettoyage de Texte
 
-```
+```text
 Format fournisseur : "  Clavier RGB   "
 Transformation : Trim et normalisation → "Clavier RGB"
 ```
 
 #### Conversion d'Unités
 
-```
+```text
 Format fournisseur : "1.5kg"
 Transformation : Conversion en grammes → 1500
 ```
@@ -275,7 +275,7 @@ Une fois validé, planifiez des imports récurrents.
 
 #### Retry en Cas d'Échec
 
-```
+```text
 Nombre de tentatives : 3
 Délai entre tentatives : 15 minutes
 ```
@@ -304,7 +304,7 @@ Après un import, consultez le rapport d'erreurs :
 
 #### 1. Erreurs de Validation
 
-```
+```text
 Ligne 42 : Le champ 'price' doit être un nombre positif (valeur : "-10.50")
 ```
 
@@ -312,7 +312,7 @@ Ligne 42 : Le champ 'price' doit être un nombre positif (valeur : "-10.50")
 
 #### 2. SKU Dupliqué
 
-```
+```text
 Ligne 156 : SKU "PROD-001" déjà existant (ligne 12)
 ```
 
@@ -320,7 +320,7 @@ Ligne 156 : SKU "PROD-001" déjà existant (ligne 12)
 
 #### 3. Image Inaccessible
 
-```
+```text
 Ligne 89 : Impossible de télécharger l'image "https://cdn.example.com/img404.jpg" (HTTP 404)
 ```
 
@@ -328,7 +328,7 @@ Ligne 89 : Impossible de télécharger l'image "https://cdn.example.com/img404.j
 
 #### 4. Champ Obligatoire Manquant
 
-```
+```text
 Ligne 203 : Le champ obligatoire 'name' est vide
 ```
 
@@ -364,7 +364,7 @@ Après correction, réimportez uniquement les lignes en erreur :
 
 Utilisez la barre de recherche pour filtrer :
 
-```
+```text
 Search: "SKU-001"
 → Affiche tous les logs concernant le produit SKU-001
 
@@ -465,7 +465,7 @@ Products Manager lit la **première feuille** du fichier Excel. Assurez-vous que
 
 Si vous avez plusieurs fournisseurs, créez **un fournisseur par source** :
 
-```
+```text
 Fournisseur A → Import quotidien à 2h
 Fournisseur B → Import toutes les 6h
 Fournisseur C → Import hebdomadaire (lundi 9h)
@@ -531,7 +531,7 @@ Pour accélérer les imports :
 
 Après chaque import, consultez les statistiques :
 
-```
+```text
 ✓ Total traité : 5000 produits
 ✓ Créés : 150 nouveaux produits
 ✓ Mis à jour : 4800 produits existants

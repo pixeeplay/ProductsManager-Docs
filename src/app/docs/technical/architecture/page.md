@@ -139,7 +139,7 @@ Le système utilise **5 buckets MinIO** spécialisés pour le stockage distribu�
 
 ### Organisation des buckets
 
-```
+```text
 catalog-products/        → Images produits, fiches techniques
   └── images/YYYY/MM/DD/
 

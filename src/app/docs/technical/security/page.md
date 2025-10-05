@@ -545,7 +545,7 @@ class Settings(BaseSettings):
 **CVEs high** : 0
 
 **Packages sécurité récents** :
-```
+```text
 cryptography==46.0.2      # CVE-2024-12797 fixé
 PyJWT==2.10.1             # Compatible cryptography >= 43
 bleach==6.1.0             # XSS protection

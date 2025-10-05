@@ -223,7 +223,7 @@ docker compose ps
 
 Vous devriez voir :
 
-```
+```text
 NAME                    STATUS              PORTS
 productsmanager-api     Up 30 seconds       0.0.0.0:8000->8000/tcp
 productsmanager-web     Up 30 seconds       0.0.0.0:3000->3000/tcp
@@ -247,7 +247,7 @@ docker compose exec api python manage.py createsuperuser
 
 Renseignez :
 
-```
+```text
 Email: admin@productsmanager.app
 Mot de passe: ********
 Confirmation: ********
@@ -275,7 +275,7 @@ docker compose exec api python manage.py loaddata demo_data.json
 
 ### Credentials par Défaut
 
-```
+```text
 Email: admin@productsmanager.app
 Mot de passe: celui que vous avez défini lors de createsuperuser
 ```
@@ -290,7 +290,7 @@ Pour un usage en production, configurez un reverse proxy (Nginx/Traefik) avec HT
 
 ### Architecture Multi-Conteneurs
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │  productsmanager-web (Next.js Frontend)         │
 │  Port: 3000                                     │
@@ -525,7 +525,7 @@ docker stats
 
 Éditez `postgresql.conf` dans le conteneur :
 
-```
+```text
 shared_buffers = 256MB
 effective_cache_size = 1GB
 max_connections = 200

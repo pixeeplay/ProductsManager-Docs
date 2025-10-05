@@ -114,7 +114,7 @@ Puis dans Products Manager :
 
 Cliquez sur **Tester la connexion** dans Products Manager :
 
-```
+```text
 ✅ Connexion à maboutique.myshopify.com réussie
 ✅ Authentification OAuth validée
 ✅ Permissions vérifiées (6/6)
@@ -151,7 +151,7 @@ Après connexion réussie, configurez les paramètres :
 
 Sélectionnez l'emplacement Shopify à synchroniser :
 
-```
+```text
 📍 Main Location (Primary)
 📍 Warehouse Paris
 📍 Retail Store NYC
@@ -521,7 +521,7 @@ Ajoutez des tags Shopify basés sur critères :
 
 Gérez plusieurs boutiques Shopify depuis Products Manager :
 
-```
+```text
 Products Manager
     ├── Shopify FR (maboutique-fr.myshopify.com)
     ├── Shopify UK (myshop-uk.myshopify.com)

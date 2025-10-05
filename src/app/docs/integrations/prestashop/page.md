@@ -112,7 +112,7 @@ Remplissez le formulaire :
 
 Cliquez sur **Tester la connexion** :
 
-```
+```text
 ✅ Connexion à maboutique.com réussie
 ✅ Authentification Webservice OK
 ✅ Permissions vérifiées (5/5 ressources)

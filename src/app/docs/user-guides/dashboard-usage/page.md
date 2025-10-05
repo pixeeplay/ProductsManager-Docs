@@ -30,7 +30,7 @@ Le panneau de **métriques principales** affiche 4 indicateurs clés :
 
 #### Total Produits
 
-```
+```text
 12,450 produits
 ↑ +350 ce mois
 ```
@@ -41,7 +41,7 @@ Le panneau de **métriques principales** affiche 4 indicateurs clés :
 
 #### Fournisseurs Actifs
 
-```
+```text
 45 fournisseurs
 → Stable
 ```
@@ -51,7 +51,7 @@ Le panneau de **métriques principales** affiche 4 indicateurs clés :
 
 #### Imports Aujourd'hui
 
-```
+```text
 8 imports
 6 réussis, 2 en échec
 ```
@@ -62,7 +62,7 @@ Le panneau de **métriques principales** affiche 4 indicateurs clés :
 
 #### Taux de Succès
 
-```
+```text
 98.5%
 ↑ +1.2% ce mois
 ```
@@ -113,7 +113,7 @@ Tableau classant les fournisseurs par :
 
 Liste chronologique des **20 derniers événements** :
 
-```
+```text
 [10:45] ✓ Import "Grossiste A" terminé - 1,250 produits (2m 10s)
 [10:30] ⚠ Stock faible détecté: PROD-12345 (5 unités)
 [10:15] ✗ Import "Fournisseur B" échoué - Connexion FTP timeout
@@ -137,7 +137,7 @@ Panneau d'alertes actives nécessitant une action :
 
 #### Stock Faible
 
-```
+```text
 ⚠ 12 produits sous le seuil de stock
 ```
 
@@ -145,7 +145,7 @@ Cliquez pour voir la liste des produits concernés.
 
 #### Imports en Échec
 
-```
+```text
 ✗ 3 imports échoués dans les 24 dernières heures
 ```
 
@@ -153,7 +153,7 @@ Cliquez pour consulter les détails et les logs d'erreur.
 
 #### Fournisseurs Inactifs
 
-```
+```text
 ℹ 5 fournisseurs sans import depuis 7 jours
 ```
 
@@ -169,7 +169,7 @@ Personnalisez la vue avec les filtres :
 
 #### Par Période
 
-```
+```text
 Dernières 24h | 7 jours | 30 jours | Personnalisé
 ```
 
@@ -177,7 +177,7 @@ Sélectionnez une plage de dates pour affiner les métriques.
 
 #### Par Fournisseur
 
-```
+```text
 Tous les fournisseurs | Grossiste A | Fournisseur B | ...
 ```
 
@@ -185,7 +185,7 @@ Affichez les données d'un fournisseur spécifique.
 
 #### Par Statut
 
-```
+```text
 Tous | Réussis | Échoués | En cours
 ```
 
@@ -237,21 +237,21 @@ Exportez vos rapports dans plusieurs formats :
 
 #### PDF
 
-```
+```text
 📄 Rapport complet avec graphiques et tableaux
 → Idéal pour présentation
 ```
 
 #### Excel (.xlsx)
 
-```
+```text
 📊 Données brutes + feuilles de calcul
 → Idéal pour analyse approfondie
 ```
 
 #### CSV
 
-```
+```text
 📋 Données tabulaires simples
 → Idéal pour traitement automatisé
 ```
@@ -285,7 +285,7 @@ Recevez des rapports par email à intervalles réguliers :
 
 #### Fréquence
 
-```
+```text
 Quotidien → Tous les jours à 9h
 Hebdomadaire → Tous les lundis à 9h
 Mensuel → Premier jour du mois à 9h
@@ -302,7 +302,7 @@ Sélectionnez les sections à inclure :
 
 #### Destinataires
 
-```
+```text
 john.doe@company.com
 manager@company.com
 ```
@@ -311,7 +311,7 @@ Ajoutez les emails des destinataires.
 
 ### Exemple de Rapport Hebdomadaire
 
-```
+```text
 Rapport Hebdomadaire - Semaine du 30 Sept au 6 Oct 2025
 
 📊 Métriques Clés
@@ -365,19 +365,19 @@ Cliquez sur **+ Ajouter un Widget** et choisissez parmi :
 
 #### Type de Visualisation
 
-```
+```text
 Graphique en ligne | Barres | Camembert | Tableau | KPI
 ```
 
 #### Source de Données
 
-```
+```text
 Imports | Produits | Fournisseurs | Analytics
 ```
 
 #### Filtres
 
-```
+```text
 Période : 30 derniers jours
 Fournisseurs : Tous
 Statut : Réussis uniquement
@@ -385,7 +385,7 @@ Statut : Réussis uniquement
 
 #### Métrique
 
-```
+```text
 Nombre d'imports | Total produits | Taux de succès | Durée moyenne
 ```
 
@@ -393,7 +393,7 @@ Nombre d'imports | Total produits | Taux de succès | Durée moyenne
 
 Configuration :
 
-```
+```text
 Type : Tableau
 Source : Imports
 Filtre : Dernières 24h
@@ -421,14 +421,14 @@ Comparez les performances entre deux périodes :
 1. **Analytics** → **Comparaison de Périodes**
 2. Sélectionnez :
 
-```
+```text
 Période 1 : 1-30 Sept 2025
 Période 2 : 1-30 Août 2025
 ```
 
 3. Consultez les écarts :
 
-```
+```text
 📊 Total Imports
 Sept : 120 (+15%)
 Août : 105
@@ -446,7 +446,7 @@ Août : 2m 08s
 
 Comparez vos fournisseurs :
 
-```
+```text
 Fournisseur A vs Fournisseur B
 
 Vitesse d'import:
@@ -477,7 +477,7 @@ Recevez des notifications quand certaines conditions sont remplies :
 
 #### Condition
 
-```
+```text
 Taux d'échec des imports > 5%
 OU
 Stock total < 1,000 produits
@@ -487,13 +487,13 @@ Durée import > 5 minutes
 
 #### Fréquence de Vérification
 
-```
+```text
 Toutes les heures | Quotidien | Temps réel
 ```
 
 #### Notification
 
-```
+```text
 ✉ Email : manager@company.com
 📱 Slack : #imports-alerts
 🔔 Notification navigateur
@@ -503,7 +503,7 @@ Toutes les heures | Quotidien | Temps réel
 
 #### Alerte Stock Critique
 
-```
+```text
 Condition : Nombre de produits en stock < 10 > 50 produits
 Fréquence : Temps réel
 Notification : Email + Slack
@@ -511,7 +511,7 @@ Notification : Email + Slack
 
 #### Alerte Performance Dégradée
 
-```
+```text
 Condition : Durée moyenne import > 3 minutes sur les 10 derniers imports
 Fréquence : Toutes les heures
 Notification : Email
@@ -519,7 +519,7 @@ Notification : Email
 
 #### Alerte Fournisseur Inactif
 
-```
+```text
 Condition : Fournisseur sans import depuis 7 jours
 Fréquence : Quotidien à 9h
 Notification : Email
