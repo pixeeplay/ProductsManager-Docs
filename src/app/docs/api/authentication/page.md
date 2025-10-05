@@ -6,7 +6,7 @@ nextjs:
     description: Guide complet d'authentification JWT pour l'API Products Manager.
 ---
 
-L'API Products Manager utilise JWT (JSON Web Tokens) pour une authentification sécurisée et stateless.
+L'API Products Manager utilise JWT (JSON Web Tokens) pour une authentification sécurisée et stateless. {% .lead %}
 
 ---
 

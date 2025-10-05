@@ -6,7 +6,7 @@ nextjs:
     description: Commencez avec Products Manager APP en moins de 10 minutes.
 ---
 
-Commencez avec Products Manager APP en moins de **10 minutes**. Ce guide vous accompagne de la création de compte à votre premier import.
+Commencez avec Products Manager APP en moins de **10 minutes**. Ce guide vous accompagne de la création de compte à votre premier import. {% .lead %}
 
 ---
 
@@ -18,7 +18,9 @@ Avant de commencer, assurez-vous d'avoir :
 - Un compte utilisateur Products Manager APP
 - Un fichier fournisseur (Excel, CSV) ou accès FTP/API
 
-> **Note** : Vous n'avez pas encore de compte ? Contactez webmaster@pixeeplay.com pour obtenir un accès démo gratuit.
+{% callout type="note" %}
+Vous n'avez pas encore de compte ? Contactez webmaster@pixeeplay.com pour obtenir un accès démo gratuit.
+{% /callout %}
 
 ---
 
@@ -65,7 +67,9 @@ L'import se déroule en **4 phases** :
 3. Insertion en base (30-60 sec)
 4. Finalisation (5 sec)
 
-> **Note** : Les imports s'exécutent en tâche de fond. Vous pouvez continuer à utiliser l'application pendant le traitement.
+{% callout type="note" %}
+Les imports s'exécutent en tâche de fond. Vous pouvez continuer à utiliser l'application pendant le traitement.
+{% /callout %}
 
 ---
 

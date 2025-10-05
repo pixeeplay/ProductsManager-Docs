@@ -6,7 +6,7 @@ nextjs:
     description: Découvrez Products Manager APP, la plateforme tout-en-un pour gérer vos données produits e-commerce.
 ---
 
-Bienvenue dans Products Manager APP - votre solution complète pour **centraliser les imports fournisseurs**, **enrichir vos produits avec l'IA**, et **optimiser votre gestion e-commerce**.
+Bienvenue dans Products Manager APP - votre solution complète pour **centraliser les imports fournisseurs**, **enrichir vos produits avec l'IA**, et **optimiser votre gestion e-commerce**. {% .lead %}
 
 ---
 
