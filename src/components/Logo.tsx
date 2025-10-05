@@ -1,24 +1,25 @@
-import Image from 'next/image'
-import logoImage from '@/images/logo.png'
-
-export function Logomark(props: React.ComponentPropsWithoutRef<'div'>) {
+export function Logomark(props: React.ComponentPropsWithoutRef<'img'>) {
+  const { className, ...rest } = props
   return (
-    <div {...props}>
-      <Image src={logoImage} alt="Products Manager APP" width={40} height={40} />
-    </div>
+    <img
+      src="/logo.png"
+      alt="Products Manager APP"
+      className={className?.replace(/fill-\S+/g, '').trim()}
+      style={{ height: '2.25rem', width: 'auto' }}
+      {...rest}
+    />
   )
 }
 
-export function Logo(props: React.ComponentPropsWithoutRef<'div'>) {
+export function Logo(props: React.ComponentPropsWithoutRef<'img'>) {
+  const { className, ...rest } = props
   return (
-    <div {...props}>
-      <Image
-        src={logoImage}
-        alt="Products Manager APP"
-        width={200}
-        height={50}
-        priority
-      />
-    </div>
+    <img
+      src="/logo.png"
+      alt="Products Manager APP"
+      className={className?.replace(/fill-\S+/g, '').trim()}
+      style={{ height: '2.25rem', width: 'auto' }}
+      {...rest}
+    />
   )
 }
