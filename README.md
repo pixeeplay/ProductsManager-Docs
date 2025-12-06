@@ -1,253 +1,268 @@
-# Product Manager APP - Documentation Site
+# Products Manager APP - Documentation
 
-Official documentation site for Product Manager APP, built with [Next.js 15](https://nextjs.org/) and the [Syntax](https://tailwindcss.com/templates/syntax) template by Tailwind CSS.
+[![Next.js](https://img.shields.io/badge/Next.js-16.0.7-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.1-61DAFB?style=flat-square&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.1.17-06B6D4?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-22_LTS-339933?style=flat-square&logo=node.js)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/License-Proprietary-red?style=flat-square)](LICENSE)
 
-## Overview
+Site de documentation officiel de **Products Manager APP**, construit avec [Next.js 16](https://nextjs.org/) et le template [Syntax](https://tailwindcss.com/templates/syntax) de Tailwind CSS.
 
-This documentation site provides comprehensive guides, API references, and integration instructions for Product Manager APP - the all-in-one platform for e-commerce product data management.
+## Apercu
 
-## Features
+Ce site de documentation fournit des guides complets, des references API et des instructions d'integration pour Products Manager APP - la plateforme tout-en-un pour la gestion des donnees produits e-commerce.
 
-- **Modern Stack**: Next.js 15, React 19, TypeScript, Tailwind CSS 4
-- **Fast Search**: FlexSearch-powered documentation search
-- **Responsive Design**: Mobile-first, accessible UI
-- **MDX Support**: Write documentation in Markdown with React components
-- **Syntax Highlighting**: Code blocks with Prism.js
-- **i18n Ready**: Multi-language support with next-intl (FR/EN)
+**URL Production**: https://docs.productsmanager.app
 
-## Documentation Structure
+## Stack Technique
+
+| Technologie | Version | Description |
+|-------------|---------|-------------|
+| Next.js | 16.0.7 | Framework React avec App Router |
+| React | 19.2.1 | Bibliotheque UI |
+| TypeScript | 5.9.3 | Typage statique |
+| Tailwind CSS | 4.1.17 | Framework CSS utility-first |
+| Markdoc | 0.5.2 | Systeme de documentation Markdown |
+| FlexSearch | 0.8.205 | Recherche full-text cote client |
+| Node.js | 22 LTS | Runtime JavaScript |
+
+## Fonctionnalites
+
+- **Stack Moderne**: Next.js 16, React 19, TypeScript strict, Tailwind CSS 4
+- **Recherche Rapide**: Recherche FlexSearch dans toute la documentation
+- **Design Responsive**: Interface mobile-first et accessible
+- **Markdoc**: Documentation en Markdown avec composants React
+- **Coloration Syntaxique**: Blocs de code avec Prism.js
+- **Mode Sombre**: Theme clair/sombre avec next-themes
+- **Security Headers**: 10 headers de securite configures
+
+## Structure de la Documentation
 
 ```
 /docs/getting-started/
-  ├─ introduction       # What is Product Manager APP
-  ├─ quick-start        # 10-minute setup guide
-  └─ installation       # Full installation instructions
+  ├─ introduction       # Qu'est-ce que Products Manager APP
+  ├─ quick-start        # Guide de demarrage en 10 minutes
+  └─ installation       # Instructions d'installation completes
 
 /docs/features/
-  ├─ import-centralisation  # Automated supplier imports
-  ├─ ai-enrichment          # AI-powered content generation
-  ├─ ean-manager            # Barcode management & ASIN lookup
-  ├─ market-intelligence    # Price tracking & analytics
-  └─ connectors             # E-commerce platform integrations
+  ├─ import-centralisation  # Imports fournisseurs automatises
+  ├─ ai-enrichment          # Generation de contenu par IA
+  ├─ ean-manager            # Gestion des codes-barres & recherche ASIN
+  └─ market-intelligence    # Suivi des prix & analytics
 
 /docs/guides/
-  ├─ supplier-management    # Configuring imports
-  ├─ product-enrichment     # Advanced AI strategies
-  └─ price-monitoring       # Competitor tracking
+  ├─ getting-started        # Guide de demarrage
+  ├─ import-workflow        # Workflow d'import
+  └─ dashboard-usage        # Utilisation du tableau de bord
 
 /docs/api/
-  ├─ authentication     # JWT authentication
-  ├─ endpoints          # REST API reference
-  └─ webhooks          # Event notifications
+  ├─ authentication     # Authentification JWT
+  ├─ endpoints          # Reference API REST
+  └─ webhooks           # Notifications d'evenements
 
 /docs/integrations/
-  ├─ odoo              # Odoo ERP integration
-  ├─ shopify           # Shopify sync
-  ├─ prestashop        # PrestaShop connector
-  └─ woocommerce       # WooCommerce integration
+  ├─ odoo              # Integration ERP Odoo
+  ├─ shopify           # Synchronisation Shopify
+  ├─ prestashop        # Connecteur PrestaShop
+  └─ woocommerce       # Integration WooCommerce
+
+/docs/technical/
+  ├─ architecture      # Architecture technique
+  ├─ database          # Schema de base de donnees
+  ├─ deployment        # Guide de deploiement
+  └─ security          # Securite et conformite
 ```
 
-## Getting Started
+## Demarrage Rapide
 
-### Prerequisites
+### Prerequis
 
-- Node.js 20+
-- npm or yarn
+- Node.js 18+ (recommande: 22 LTS)
+- npm 8+
 
 ### Installation
 
 ```bash
-# Install dependencies
+# Cloner le repository
+git clone git@github.com:pixeeplay/ProductsManager-Docs.git
+cd ProductsManager-Docs
+
+# Installer les dependances
 npm install
 
-# Start development server
+# Demarrer le serveur de developpement (Turbopack)
 npm run dev
 
-# Build for production
-npm run build
-
-# Start production server
-npm run start
+# Ou avec Webpack (fallback)
+npm run dev:webpack
 ```
 
-### Development
+### Scripts Disponibles
 
-The site will be available at:
-- Development: http://localhost:3000
-- Production: https://docs.productsmanager.app
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Serveur dev avec Turbopack |
+| `npm run dev:webpack` | Serveur dev avec Webpack |
+| `npm run build` | Build de production |
+| `npm run start` | Serveur de production |
+| `npm run lint` | Verification ESLint |
+| `npm run type-check` | Verification TypeScript |
 
-### Adding New Pages
+### URLs
 
-1. Create a new folder in `src/app/docs/[section]/[page]/`
-2. Add a `page.md` file with frontmatter:
+- **Developpement**: http://localhost:3000
+- **Production**: https://docs.productsmanager.app
+
+## Ajouter une Nouvelle Page
+
+1. Creer un nouveau dossier dans `src/app/docs/[section]/[page]/`
+2. Ajouter un fichier `page.md` avec frontmatter:
 
 ```md
 ---
-title: Your Page Title
+title: Titre de la Page
 nextjs:
   metadata:
-    title: SEO Title
-    description: SEO description
+    title: Titre SEO
+    description: Description SEO
 ---
 
-Your content here. {% .lead %}
+Votre contenu ici. {% .lead %}
 ```
 
-3. Update `src/lib/navigation.ts` to add the link
+3. Mettre a jour `src/lib/navigation.ts` pour ajouter le lien
 
-### MDX Components
+## Composants Markdoc
 
-Use built-in components for rich content:
+Utilisez les composants integres pour un contenu riche:
 
 ```md
 {% quick-links %}
-{% quick-link title="Link" icon="installation" href="/docs/page" description="Description" /%}
+{% quick-link title="Lien" icon="installation" href="/docs/page" description="Description" /%}
 {% /quick-links %}
 
-{% callout type="warning" title="Warning Title" %}
-Important information here.
+{% callout type="warning" title="Attention" %}
+Information importante ici.
+{% /callout %}
+
+{% callout type="note" title="Note" %}
+Information utile.
 {% /callout %}
 ```
 
 ## Configuration
 
-### Environment Variables
+### Variables d'Environnement
 
-Create `.env.local`:
+Creer `.env.local`:
 
 ```bash
 NEXT_PUBLIC_SITE_URL=https://docs.productsmanager.app
 NEXT_PUBLIC_API_URL=https://api.productsmanager.app
 ```
 
-### Customization
+### Personnalisation
 
-- **Theme**: Edit `src/app/layout.tsx`
-- **Navigation**: Edit `src/lib/navigation.ts`
-- **Logo**: Replace `src/components/Logo.tsx`
-- **Colors**: Edit Tailwind config in `tailwind.config.js`
+| Element | Fichier |
+|---------|---------|
+| Theme/Layout | `src/app/layout.tsx` |
+| Navigation | `src/lib/navigation.ts` |
+| Logo | `src/components/Logo.tsx` |
+| Styles | `src/styles/tailwind.css` |
 
-## Internationalization (i18n)
+## Deploiement
 
-### Supported Languages
+### Coolify (Production)
 
-- English (en)
-- French (fr)
+Le deploiement est automatique via push sur la branche `main`.
 
-### Adding Translations
-
-1. Add translations in `messages/[locale].json`
-2. Update locale routing in `middleware.ts`
-3. Use `useTranslations()` hook in components
-
-## Deployment
-
-### Coolify (Production - Recommended)
-
-**Step 1: Create Application in Coolify**
-
-1. New Application → **Docker Compose**
-2. Configuration:
-   - Repository: `https://github.com/pixeeplay/ProductsManager-Docs.git`
-   - Branch: `main`
-   - Compose file: `docker-compose.yml`
-   - Base directory: `/`
-
-**Step 2: Environment Variables**
-
-Add in Coolify UI:
-```bash
-NEXT_PUBLIC_SITE_URL=https://docs.productsmanager.app
-NEXT_PUBLIC_API_URL=https://api.productsmanager.app
-```
-
-**Step 3: Domain Configuration**
-
-- Domain: `docs.productsmanager.app`
+**Configuration Coolify**:
+- Repository: `https://github.com/pixeeplay/ProductsManager-Docs.git`
+- Branch: `main`
+- Dockerfile: `Dockerfile`
 - Port: `3000`
-- SSL: Generate Let's Encrypt certificate
+- Domain: `docs.productsmanager.app`
 
-**Step 4: Deploy** 🚀
-
-**Troubleshooting**:
-- Build fails? Try "Force rebuild without cache"
-- Site inaccessible? Verify DNS A record points to Coolify server
-- SSL issues? Generate certificate in Coolify SSL settings
-
-### Docker (Local Development)
+### Docker (Local)
 
 ```bash
-# Build Docker image
-docker build -t productsmanager-docs -f Dockerfile.simple .
+# Build
+docker build -t productsmanager-docs .
 
-# Run container
+# Run
 docker run -p 3000:3000 \
   -e NEXT_PUBLIC_SITE_URL=https://docs.productsmanager.app \
   -e NEXT_PUBLIC_API_URL=https://api.productsmanager.app \
   productsmanager-docs
 ```
 
-### Vercel (Alternative)
+### Docker Compose
 
 ```bash
-# Deploy to Vercel
-vercel --prod
+docker-compose up -d
 ```
 
-## SEO
+## Securite
 
-The site includes:
-- Semantic HTML
-- Meta tags (title, description, OG)
-- Sitemap.xml (auto-generated)
-- robots.txt
-- Structured data (JSON-LD)
+Le site implemente les headers de securite suivants:
+
+| Header | Valeur |
+|--------|--------|
+| Strict-Transport-Security | max-age=31536000; includeSubDomains; preload |
+| Content-Security-Policy | Configured |
+| X-Frame-Options | DENY |
+| X-Content-Type-Options | nosniff |
+| X-XSS-Protection | 1; mode=block |
+| Referrer-Policy | strict-origin-when-cross-origin |
+| Permissions-Policy | camera=(), microphone=(), geolocation=() |
 
 ## Performance
 
-Optimizations:
-- Image optimization with Next.js Image
-- Code splitting
-- Route prefetching
-- Static generation where possible
+Optimisations incluses:
 
-## Contributing
+- Optimisation d'images avec Next.js Image (AVIF/WebP)
+- Code splitting automatique
+- Prefetching des routes
+- Generation statique (SSG) pour toutes les pages
+- Compression gzip activee
+- Build standalone optimise pour Docker
 
-### Content Guidelines
+## Audit & Roadmap
 
-- Use clear, concise language
-- Include code examples
-- Add callouts for important information
-- Link to related pages
-- Test all code snippets
+Voir les fichiers suivants pour plus de details:
 
-### Code Style
+- [`ROADMAP.md`](ROADMAP.md) - Plan d'action et roadmap
+- [`audits/`](audits/) - Rapports d'audit de securite
 
-- Use Prettier for formatting
-- Follow TypeScript best practices
-- Write semantic HTML
-- Use Tailwind CSS utilities
+## Contribuer
 
-## Tech Stack
+### Guidelines de Contenu
 
-- **Framework**: Next.js 15
-- **UI**: React 19, Tailwind CSS 4
-- **Markdown**: Markdoc, MDX
-- **Search**: FlexSearch
-- **Icons**: Heroicons
-- **Fonts**: Inter (via next/font)
-- **Deployment**: Vercel
+- Utiliser un langage clair et concis
+- Inclure des exemples de code
+- Ajouter des callouts pour les informations importantes
+- Lier aux pages connexes
+- Tester tous les extraits de code
 
-## License
+### Style de Code
 
-This documentation is part of Product Manager APP.
+- Prettier pour le formatage
+- Suivre les best practices TypeScript
+- Ecrire du HTML semantique
+- Utiliser les utilitaires Tailwind CSS
 
 ## Support
 
 - **Documentation**: https://docs.productsmanager.app
-- **API Reference**: https://docs.productsmanager.app/api/authentication
+- **Reference API**: https://docs.productsmanager.app/api/authentication
+- **Application**: https://productsmanager.app
 - **Support**: support@productsmanager.app
+
+## Licence
+
+Cette documentation fait partie de Products Manager APP - Logiciel proprietaire.
 
 ---
 
-Built with [Syntax](https://tailwindcss.com/templates/syntax) by Tailwind CSS
+Construit avec [Syntax](https://tailwindcss.com/templates/syntax) par Tailwind CSS
