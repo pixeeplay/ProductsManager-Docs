@@ -1,198 +1,293 @@
 # ProductsManager-Docs - Roadmap & Audit
 
-## Rapport d'Audit - 6 Decembre 2025
+## Rapport d'Audit Complet - 6 Decembre 2025
 
-### Statut Actuel
+### Statut Global
 
 | Metrique | Valeur |
 |----------|--------|
 | **Site** | https://docs.productsmanager.app/ |
-| **Statut** | En cours de correction |
-| **Score Securite (avant)** | 6.5/10 (D+) |
-| **Score Securite (apres corrections)** | 9/10 (A-) |
-| **Vulnerabilites NPM (avant)** | 3 (1 critique, 1 moderee, 1 basse) |
-| **Vulnerabilites NPM (apres)** | 1 (basse - brace-expansion) |
+| **Statut** | OPERATIONNEL |
+| **HTTP Response** | 200 OK (150ms TTFB) |
+| **Container** | HEALTHY (0 failures) |
+| **Vulnerabilites NPM** | 0 |
+| **Score Securite** | 9/10 (A) |
+| **Score TypeScript** | 8/10 |
+| **Score Accessibilite** | 8/10 |
 
 ---
 
-## Problemes Critiques Identifies
+## Resume de l'Audit (15 Agents Paralleles)
 
-### 1. Securite - Tentatives d'Intrusion
+### 1. Site Web - OPERATIONNEL
 
-**Status**: Detecte - Recommandation de blocage
+- **Status Code**: 200 OK
+- **Protocol**: HTTP/2
+- **TTFB**: 150ms
+- **Cache**: HIT (CDN operationnel)
+- **Security Headers**: 10/10 implementes
 
-- **IP Malveillante**: `193.34.213.150`
-- **Type d'attaque**: Tentatives d'execution de code via `busybox wget | /bin/bash`
-- **Nombre de requetes**: 2020+
-- **Resultat**: Bloquees (Alpine n'a pas `/bin/bash`)
+### 2. Container Docker - HEALTHY
 
-**Action recommandee**:
-- Bloquer l'IP au niveau firewall/Coolify
-- Configurer Cloudflare WAF si disponible
-- Implementer fail2ban
+- **Container**: `docs-tsgwgs4c4gkgsg480ckw80cg-204627991608`
+- **Health Check**: Tous les checks passent
+- **Memoire**: 61.58 MiB
+- **CPU**: 0.00% (idle)
+- **Restarts**: 0
 
-### 2. Vulnerabilite RCE Next.js
-
-**Status**: CORRIGE
-
-- **CVE**: GHSA-9qr9-h5gf-34mp
-- **Severite**: CRITIQUE (CVSS 10.0)
-- **Version affectee**: Next.js < 15.4.8
-- **Solution**: Mise a jour vers Next.js 15.5.7
-
-### 3. Prototype Pollution js-yaml
-
-**Status**: CORRIGE
-
-- **CVE**: GHSA-mh29-5h37-fv8m
-- **Severite**: MODEREE
-- **Version affectee**: js-yaml < 4.1.1
-- **Solution**: Mise a jour vers js-yaml 4.1.1
-
-### 4. Absence de Security Headers
-
-**Status**: CORRIGE
-
-Headers implementes:
-- `Content-Security-Policy`
-- `Strict-Transport-Security` (HSTS)
-- `X-Frame-Options: DENY`
-- `X-Content-Type-Options: nosniff`
-- `X-XSS-Protection`
-- `Referrer-Policy`
-- `Permissions-Policy`
-- `Cross-Origin-Embedder-Policy`
-- `Cross-Origin-Opener-Policy`
-- `Cross-Origin-Resource-Policy`
-
-### 5. Metadonnees Incorrectes
-
-**Status**: CORRIGE
-
-- **Avant**: "CacheAdvance - Never miss the cache again."
-- **Apres**: "Products Manager APP - Documentation"
-
----
-
-## Corrections Implementees
-
-### Phase 1: Securite Critique
-
-| Fichier | Modification |
-|---------|--------------|
-| `package.json` | Upgrade Next.js 15.5.7, js-yaml 4.1.1 |
-| `package.json` | Suppression de next-intl (non utilise) |
-| `next.config.mjs` | Ajout de 10 security headers |
-| `next.config.mjs` | Ajout output: 'standalone' |
-
-### Phase 2: Optimisations
-
-| Fichier | Modification |
-|---------|--------------|
-| `src/app/layout.tsx` | Correction metadonnees SEO |
-| `src/components/Logo.tsx` | Utilisation de next/image |
-| `Dockerfile` | Ajout HEALTHCHECK explicite |
-| `Dockerfile` | Copie du dossier public |
-
----
-
-## Architecture Technique
-
-### Stack
-
-- **Framework**: Next.js 16.0.7 (React 19.2.1)
-- **Styling**: Tailwind CSS 4.1.17
-- **TypeScript**: 5.9.3
-- **Node.js**: 22 LTS (Alpine)
-- **Markdown**: Markdoc
-- **Recherche**: FlexSearch
-- **Theme**: next-themes (dark mode)
-
-### Structure du Projet
+### 3. Securite NPM - AUCUNE VULNERABILITE
 
 ```
-src/
-├── app/                    # Routes Next.js 15 (App Router)
-│   ├── layout.tsx         # Layout racine
-│   ├── page.md            # Page d'accueil
-│   └── docs/              # 24 pages de documentation
-├── components/            # 24 composants React
-├── lib/                   # Utilitaires (navigation, sections)
-├── markdoc/               # Configuration Markdoc
-├── styles/                # CSS (Tailwind, Prism)
-└── fonts/                 # Police Lexend
+npm audit: 0 vulnerabilities
 ```
 
-### Pages de Documentation
+### 4. Dependencies - 70% A JOUR
 
-- **Getting Started**: introduction, quick-start, installation
-- **Features**: import-centralisation, ai-enrichment, ean-manager, market-intelligence
-- **User Guides**: getting-started, import-workflow, dashboard-usage
-- **API**: authentication, endpoints, webhooks
-- **Technical**: architecture, database, deployment, security
-- **Integrations**: Odoo, Shopify, PrestaShop, WooCommerce
-- **Releases**: changelog, v3.2.0, v3.3.0
+| Package | Version Actuelle | Derniere | Status |
+|---------|-----------------|----------|--------|
+| next | 16.0.7 | 16.0.7 | A jour |
+| react | 19.2.1 | 19.2.1 | A jour |
+| tailwindcss | 4.1.17 | 4.1.17 | A jour |
+| typescript | 5.9.3 | 5.9.3 | A jour |
+| @headlessui/react | 2.2.6 | 2.2.9 | Minor update |
+| @markdoc/markdoc | 0.5.2 | 0.5.4 | Minor update |
+| flexsearch | 0.8.205 | 0.8.212 | Minor update |
+| sharp | 0.34.3 | 0.34.5 | Minor update |
+
+### 5. Template Tailwind Plus - MAIN EST PLUS RECENT
+
+Le projet principal est **plus a jour** que le template:
+- Template: Next.js 15, Tailwind 4.1.15
+- Main: Next.js 16, Tailwind 4.1.17
+
+Aucune mise a jour necessaire depuis le template.
+
+---
+
+## Problemes Identifies
+
+### CRITIQUE (0)
+
+Aucun probleme critique detecte.
+
+### HAUTE PRIORITE (4 erreurs ESLint)
+
+**1. Search.tsx - React Hooks Violations**
+- Ligne 378: Acces a `inputRef.current` pendant le render
+- Ligne 438: setState synchrone dans useEffect
+
+**2. ThemeSelector.tsx - React Hooks Violation**
+- Ligne 61: setState synchrone dans useEffect
+
+**3. Logo.tsx - Code Duplique**
+- `Logo` et `Logomark` sont 100% identiques
+
+**4. npm run lint - Script Casse**
+- Next.js 16 n'a plus de commande `next lint`
+- Solution: Changer en `eslint .`
+
+### MOYENNE PRIORITE
+
+**1. Accessibilite**
+- Search input manque un label accessible
+- Navigation manque aria-label
+- PrevNextLinks utilise `<dl>` incorrectement
+
+**2. TypeScript Config**
+- Target ES6 pourrait etre ES2020+
+- Manque `noUnusedLocals`, `noUnusedParameters`
+
+**3. Metadata SEO**
+- Manque OpenGraph tags
+- Manque Twitter Card
+- Lang="en" mais description en francais
+
+**4. CSP - Directives Unsafe**
+- `'unsafe-inline'` et `'unsafe-eval'` dans script-src
+
+### BASSE PRIORITE
+
+**1. Optimisation Build**
+- Bundle JS initial: 1.3MB (cible: <1MB)
+- Images blur non optimisees (433KB)
+- Search devrait etre lazy-loaded
+
+**2. Configuration**
+- Manque `.dockerignore` verification
+- Ancien `.eslintrc.json` a supprimer
+
+---
+
+## Plan d'Action
+
+### Phase 1: Corrections Immediates
+
+#### 1.1 Corriger le script lint
+```json
+// package.json
+"lint": "eslint ."
+```
+
+#### 1.2 Supprimer ancien fichier ESLint
+```bash
+rm .eslintrc.json
+```
+
+#### 1.3 Mettre a jour les dependencies mineures
+```bash
+npm update @headlessui/react @markdoc/markdoc flexsearch sharp @types/react-dom
+```
+
+### Phase 2: Corrections Code
+
+#### 2.1 Corriger Search.tsx (Hooks violations)
+- Refactorer l'acces a inputRef
+- Utiliser initialState au lieu de setState dans useEffect
+
+#### 2.2 Corriger ThemeSelector.tsx
+- Initialiser `mounted` avec une fonction
+
+#### 2.3 Refactorer Logo.tsx
+- Supprimer la duplication Logo/Logomark
+
+#### 2.4 Corriger PrevNextLinks.tsx
+- Remplacer `<dl>` par `<nav>`
+
+### Phase 3: Ameliorations SEO
+
+#### 3.1 Ajouter OpenGraph metadata
+```typescript
+export const metadata: Metadata = {
+  openGraph: {
+    title: 'Products Manager APP - Documentation',
+    description: '...',
+    url: 'https://docs.productsmanager.app',
+    siteName: 'Products Manager Docs',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Products Manager APP - Documentation',
+  },
+}
+```
+
+#### 3.2 Corriger la langue
+- Changer `lang="en"` en `lang="fr"`
+- Ou traduire la description en anglais
+
+### Phase 4: Optimisation Performance
+
+#### 4.1 Lazy load Search component
+```typescript
+const SearchDialog = dynamic(() => import('./SearchDialog'), {
+  loading: () => <SearchSkeleton />,
+})
+```
+
+#### 4.2 Optimiser images blur
+- Convertir en WebP/AVIF
+- Ou utiliser des gradients CSS
+
+#### 4.3 Renforcer CSP
+- Remplacer `unsafe-inline` par nonces
+- Supprimer `unsafe-eval` si possible
+
+---
+
+## Metriques de Build Actuelles
+
+```
+Build Status: SUCCESS
+Time: ~15s
+Pages: 27 static
+Bundle (shared): 99.7 kB
+First Load JS: 132 kB
+.next directory: 277 MB total
+  - cache: 198 MB
+  - standalone: 66 MB
+  - static: 2.5 MB
+```
+
+---
+
+## Architecture
+
+### Stack Technique
+
+| Composant | Version | Status |
+|-----------|---------|--------|
+| Next.js | 16.0.7 | Latest |
+| React | 19.2.1 | Latest |
+| TypeScript | 5.9.3 | Latest |
+| Tailwind CSS | 4.1.17 | Latest |
+| Node.js | 22 LTS | Latest |
+| Markdoc | 0.5.2 | Stable |
+| FlexSearch | 0.8.205 | Stable |
+
+### Configuration Securite
+
+| Header | Valeur |
+|--------|--------|
+| X-Frame-Options | DENY |
+| X-Content-Type-Options | nosniff |
+| X-XSS-Protection | 1; mode=block |
+| Referrer-Policy | strict-origin-when-cross-origin |
+| HSTS | max-age=31536000; includeSubDomains; preload |
+| CSP | Configured (voir next.config.mjs) |
+| COEP | credentialless |
+| COOP | same-origin |
+| CORP | same-origin |
+| Permissions-Policy | camera=(), microphone=(), geolocation=() |
 
 ---
 
 ## Roadmap Future
 
-### Court Terme (Q4 2025)
+### Court Terme (Decembre 2025)
 
-- [ ] Implementer sitemap.xml automatique
-- [ ] Ajouter robots.txt
-- [ ] Configurer analytics (Plausible/Umami)
-- [ ] Ajouter cache headers pour assets statiques
+- [x] Audit securite complet
+- [ ] Corriger 4 erreurs ESLint (React Hooks)
+- [ ] Ajouter OpenGraph/Twitter metadata
+- [ ] Optimiser images blur
 
 ### Moyen Terme (Q1 2026)
 
-- [ ] Internationalisation (FR/EN)
-- [ ] Mode offline avec Service Worker
-- [ ] Versioning de la documentation
-- [ ] Integration avec le changelog automatique
+- [ ] Implementer sitemap.xml automatique
+- [ ] Ajouter robots.txt
+- [ ] Configurer analytics (Plausible)
+- [ ] Lazy loading Search component
+- [ ] Renforcer CSP (supprimer unsafe-*)
 
 ### Long Terme (2026+)
 
-- [ ] API interactive (Swagger/OpenAPI)
-- [ ] Tutoriels video integres
-- [ ] Chatbot IA pour recherche
-- [ ] Documentation contributive
+- [ ] Internationalisation (FR/EN)
+- [ ] Mode offline (Service Worker)
+- [ ] Documentation API interactive (OpenAPI)
+- [ ] Versioning de la documentation
+- [ ] Chatbot IA integre
 
 ---
 
-## Metriques de Build
-
-```
-Build Status: SUCCESS
-Compilation Time: ~15s
-Pages Generated: 29 (static)
-JavaScript Bundle: 99.7 kB (shared)
-First Load JS: 132 kB
-TypeScript Errors: 0
-ESLint Warnings: 0 (apres corrections)
-```
-
----
-
-## Deploiement
-
-### Docker
+## Commandes Utiles
 
 ```bash
-# Build
-docker build -t productsmanager-docs .
+# Developpement
+npm run dev            # Mode Turbopack
+npm run dev:webpack    # Mode Webpack (fallback)
 
-# Run
+# Build
+npm run build          # Production build
+npm run type-check     # Verification TypeScript
+
+# Lint
+npm run lint           # ESLint (apres correction)
+npx eslint .           # Alternative directe
+
+# Docker
+docker build -t productsmanager-docs .
 docker run -p 3000:3000 productsmanager-docs
 ```
-
-### Coolify
-
-Le deploiement est automatique via push sur la branche `main`.
-
-**Variables d'environnement**:
-- `NEXT_PUBLIC_SITE_URL`: https://docs.productsmanager.app
-- `NEXT_PUBLIC_API_URL`: https://api.productsmanager.app
 
 ---
 
@@ -201,7 +296,8 @@ Le deploiement est automatique via push sur la branche `main`.
 - **Repository**: github.com/pixeeplay/ProductsManager-Docs
 - **Maintainer**: Equipe Pixeeplay
 - **Date du rapport**: 6 Decembre 2025
+- **Prochaine revision**: Janvier 2026
 
 ---
 
-*Ce document est genere automatiquement lors des audits de securite.*
+*Audit realise avec 15 agents paralleles - Claude Code*
