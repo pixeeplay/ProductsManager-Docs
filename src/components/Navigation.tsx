@@ -14,7 +14,7 @@ export function Navigation({
   let pathname = usePathname()
 
   return (
-    <nav className={clsx('text-base lg:text-sm', className)}>
+    <nav className={clsx('text-base lg:text-sm', className)} aria-label="Documentation">
       <ul role="list" className="space-y-9">
         {navigation.map((section) => (
           <li key={section.title}>

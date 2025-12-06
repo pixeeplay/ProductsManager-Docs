@@ -55,11 +55,19 @@ export function ThemeSelector(
   props: React.ComponentPropsWithoutRef<typeof Listbox<'div'>>,
 ) {
   let { theme, setTheme } = useTheme()
-  let [mounted, setMounted] = useState(false)
+  // Use function initializer to avoid setState in useEffect
+  let [mounted, setMounted] = useState(() => {
+    // During SSR, return false. On client, check if document exists
+    if (typeof document === 'undefined') return false
+    return true
+  })
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    // Only set mounted if not already mounted (handles SSR hydration)
+    if (!mounted) {
+      setMounted(true)
+    }
+  }, [mounted])
 
   if (!mounted) {
     return <div className="h-6 w-6" />

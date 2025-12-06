@@ -27,7 +27,25 @@ export const metadata: Metadata = {
     default: 'Products Manager APP - Documentation',
   },
   description:
-    'Documentation officielle de Products Manager APP - Plateforme d\'import centralisé et d\'enrichissement IA pour la gestion de produits e-commerce',
+    'Documentation officielle de Products Manager APP - Plateforme d\'import centralise et d\'enrichissement IA pour la gestion de produits e-commerce',
+  metadataBase: new URL('https://docs.productsmanager.app'),
+  openGraph: {
+    title: 'Products Manager APP - Documentation',
+    description: 'Documentation officielle de Products Manager APP - Plateforme d\'import centralise et d\'enrichissement IA pour la gestion de produits e-commerce',
+    url: 'https://docs.productsmanager.app',
+    siteName: 'Products Manager Docs',
+    type: 'website',
+    locale: 'fr_FR',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Products Manager APP - Documentation',
+    description: 'Documentation officielle de Products Manager APP',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 }
 
 export default function RootLayout({
@@ -37,7 +55,7 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="en"
+      lang="fr"
       className={clsx('h-full antialiased', inter.variable, lexend.variable)}
       suppressHydrationWarning
     >

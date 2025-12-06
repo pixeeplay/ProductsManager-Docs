@@ -255,6 +255,8 @@ const SearchInput = forwardRef<
   }
 >(function SearchInput({ autocomplete, autocompleteState, onClose }, inputRef) {
   let inputProps = autocomplete.getInputProps({ inputElement: null })
+  // aria-label for accessibility
+  const ariaLabel = "Rechercher dans la documentation"
 
   return (
     <div className="group relative flex h-12">
@@ -262,6 +264,7 @@ const SearchInput = forwardRef<
       <input
         ref={inputRef}
         data-autofocus
+        aria-label={ariaLabel}
         className={clsx(
           'flex-auto appearance-none bg-transparent pl-12 text-slate-900 outline-hidden placeholder:text-slate-400 focus:w-full focus:flex-none sm:text-sm dark:text-white [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-webkit-search-results-button]:hidden [&::-webkit-search-results-decoration]:hidden',
           autocompleteState.status === 'stalled' ? 'pr-11' : 'pr-4',
@@ -375,7 +378,7 @@ function SearchDialog({
               <form
                 ref={formRef}
                 {...autocomplete.getFormProps({
-                  inputElement: inputRef.current,
+                  inputElement: null,
                 })}
               >
                 <SearchInput
@@ -430,15 +433,21 @@ function useSearchProps() {
   }
 }
 
+function getModifierKey() {
+  if (typeof navigator === 'undefined') return undefined
+  return /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform) ? '⌘' : 'Ctrl '
+}
+
 export function Search() {
-  let [modifierKey, setModifierKey] = useState<string>()
+  let [modifierKey, setModifierKey] = useState<string | undefined>(getModifierKey)
   let { buttonProps, dialogProps } = useSearchProps()
 
+  // Set modifier key on mount for SSR hydration
   useEffect(() => {
-    setModifierKey(
-      /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform) ? '⌘' : 'Ctrl ',
-    )
-  }, [])
+    if (!modifierKey) {
+      setModifierKey(getModifierKey())
+    }
+  }, [modifierKey])
 
   return (
     <>
