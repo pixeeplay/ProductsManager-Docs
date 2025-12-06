@@ -100,8 +100,10 @@ Headers implementes:
 
 ### Stack
 
-- **Framework**: Next.js 15.5.7 (React 19)
-- **Styling**: Tailwind CSS 4.1.11
+- **Framework**: Next.js 16.0.7 (React 19.2.1)
+- **Styling**: Tailwind CSS 4.1.17
+- **TypeScript**: 5.9.3
+- **Node.js**: 22 LTS (Alpine)
 - **Markdown**: Markdoc
 - **Recherche**: FlexSearch
 - **Theme**: next-themes (dark mode)
