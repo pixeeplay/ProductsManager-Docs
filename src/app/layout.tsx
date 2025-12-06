@@ -23,11 +23,11 @@ const lexend = localFont({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s - Docs',
-    default: 'CacheAdvance - Never miss the cache again.',
+    template: '%s - Products Manager Docs',
+    default: 'Products Manager APP - Documentation',
   },
   description:
-    'Cache every single thing your app could ever do ahead of time, so your code never even has to run at all.',
+    'Documentation officielle de Products Manager APP - Plateforme d\'import centralisé et d\'enrichissement IA pour la gestion de produits e-commerce',
 }
 
 export default function RootLayout({
