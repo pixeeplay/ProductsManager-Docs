@@ -1,328 +1,703 @@
 ---
-title: Base de Données
-description: Architecture multi-DB, optimisations et Database Optimizer
+title: Base de Donnees
+description: Architecture 7 bases de donnees, modeles cles et optimisations
 ---
 
-# Base de Données
+# Base de Donnees
 
-Le système Suppliers-Import utilise une architecture multi-bases de données PostgreSQL haute performance, avec un optimiseur intelligent qui a généré un ROI de 2,257% et des économies de €66,000/an.
+Le systeme ProductsManager utilise une architecture multi-bases de donnees PostgreSQL haute performance avec 7 bases specialisees, chacune optimisee pour son domaine fonctionnel.
 
 {% .lead %}
 
 ---
 
-## Architecture Multi-DB
+## Architecture 7 Bases de Donnees
 
-L'architecture repose sur **5 bases PostgreSQL spécialisées**, chacune optimisée pour son domaine fonctionnel avec des pools de connexions dédiés.
+L'architecture repose sur **7 bases PostgreSQL specialisees**, avec des pools de connexions dedies via asyncpg.
 
 {% callout type="success" title="Impact Performance" %}
-Migration vers multi-DB : **-85% requêtes lentes** (16,370 → 2,500/jour), **0% pool exhaustion** (vs 92% avant)
+Migration vers multi-DB : **-85% requetes lentes**, **0% pool exhaustion**, isolation des pannes par domaine
 {% /callout %}
 
-### Vue d'ensemble des bases
+### Vue d'ensemble
 
-| Base | Tables | Pool | Usage Principal |
-|------|--------|------|-----------------|
-| **db_catalog** | 9 | 30 | Produits, fournisseurs, catégories |
-| **db_imports** | 8 | 20 | Jobs d'import, logs, configurations |
-| **db_media** | 4 | 15 | Fichiers média, métadonnées |
-| **db_code2asin** | 5 | 12 | Mapping Amazon ASIN |
-| **db_analytics** | 6 | 10 | Métriques, rapports, analytics |
+| Base | Tables | Pool | Temps Moyen | Usage Principal |
+|------|--------|------|-------------|-----------------|
+| **db_core** | 5+ | 5 | <10ms | Auth, users, permissions, config |
+| **db_catalog** | 40+ | 20 | <50ms | Produits, fournisseurs, categories |
+| **db_imports** | 15+ | 15 | <40ms | Jobs d'import, configs, logs |
+| **db_exports** | 3+ | 10 | <20ms | Plateformes export, jobs |
+| **db_media** | 10+ | 10 | <30ms | Fichiers media, thumbnails |
+| **db_code2asin** | 8+ | 10 | <30ms | Mapping EAN/ASIN Amazon |
+| **db_analytics** | 12+ | 10 | <60ms | Metriques, rapports |
 
-**Total : 32 tables, 87 connexions base, 282 connexions max**
+---
+
+## db_core - Systeme Central
+
+**Connection** : `postgresql+asyncpg://user:pass@host:5432/db_core`
+
+**Pool** : 5 connexions (faible volume, haute criticite)
+
+### Modeles Cles
+
+#### users
+
+```sql
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(100) UNIQUE,
+    hashed_password VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    role VARCHAR(50) NOT NULL DEFAULT 'user',
+    is_active BOOLEAN DEFAULT TRUE,
+    is_verified BOOLEAN DEFAULT FALSE,
+    is_superuser BOOLEAN DEFAULT FALSE,
+    is_admin BOOLEAN DEFAULT FALSE,
+    permissions JSONB NOT NULL DEFAULT '{}',
+    last_login TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_is_active ON users(is_active);
+```
+
+#### roles & permissions
+
+```sql
+CREATE TABLE roles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE permissions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    resource VARCHAR(100),  -- 'product', 'supplier', 'import'
+    action VARCHAR(50)      -- 'create', 'read', 'update', 'delete'
+);
+
+CREATE TABLE role_permissions (
+    role_id INTEGER REFERENCES roles(id),
+    permission_id INTEGER REFERENCES permissions(id),
+    PRIMARY KEY (role_id, permission_id)
+);
+```
+
+#### notifications
+
+```sql
+CREATE TABLE notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    type VARCHAR(50) NOT NULL,  -- 'info', 'success', 'warning', 'error'
+    read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMP DEFAULT (NOW() + INTERVAL '7 days'),
+    metadata JSONB NOT NULL DEFAULT '{}'
+);
+
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX idx_notifications_read ON notifications(read);
+```
 
 ---
 
 ## db_catalog - Catalogue Produits
 
-### Schéma
+**Connection** : `postgresql+asyncpg://user:pass@host:5432/db_catalog`
 
-**Tables principales** :
-- `products` : 133,149 produits actifs
-- `suppliers` : Fournisseurs et configurations
-- `categories` : Arborescence de catégories
-- `brands` : Marques produits
-- `product_images` : Références images MinIO
-- `product_variants` : Variantes et déclinaisons
-- `price_history` : Historique des prix
-- `stock_history` : Historique des stocks
+**Pool** : 20 connexions (trafic le plus eleve)
 
-### Index Critiques
+### Modeles Cles
+
+#### products
 
 ```sql
--- Index composite pour listes produits actifs
-CREATE INDEX CONCURRENTLY idx_products_active_created_desc
-  ON products(is_active, created_at DESC)
-  WHERE is_active = true;
+CREATE TABLE products (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
--- Index recherche par SKU
-CREATE INDEX CONCURRENTLY idx_products_sku_active_title
-  ON products(sku, is_active, title)
-  WHERE is_active = true;
+    -- Identifiants
+    ean VARCHAR(20),
+    asin VARCHAR(20),
+    sku VARCHAR(100),
+    upc VARCHAR(12),
+    gtin VARCHAR(14),
+    manufacturer_reference VARCHAR(100),
+    external_id VARCHAR(255),
 
--- Index fournisseur
-CREATE INDEX idx_products_supplier_id
-  ON products(supplier_id);
+    -- Info de base
+    title VARCHAR(500) NOT NULL,
+    description TEXT,
+    short_description VARCHAR(500),
+
+    -- Relations
+    supplier_id UUID REFERENCES suppliers(id),
+    category_id UUID,
+    brand_id UUID REFERENCES brands(id),
+
+    -- Statut
+    status VARCHAR(50) DEFAULT 'active',
+    is_active BOOLEAN DEFAULT TRUE,
+
+    -- Dimensions & Poids
+    weight NUMERIC(10, 3),
+    width NUMERIC(10, 2),
+    height NUMERIC(10, 2),
+    depth NUMERIC(10, 2),
+
+    -- Specs techniques (JSONB flexible)
+    technical_specs JSONB,
+
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_products_ean ON products(ean);
+CREATE INDEX idx_products_asin ON products(asin);
+CREATE INDEX idx_products_sku ON products(sku);
+CREATE INDEX idx_products_supplier_id ON products(supplier_id);
+CREATE INDEX idx_products_is_active ON products(is_active);
+CREATE INDEX idx_products_created_at ON products(created_at);
 ```
 
-### Performances
+#### suppliers
 
-**Avant optimisation** :
-- Requête liste produits : **850ms**
-- Sequential scans : 8,450/jour
+```sql
+CREATE TABLE suppliers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(50),
+    address TEXT,
+    country VARCHAR(2) DEFAULT 'FR',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
 
-**Après optimisation** :
-- Requête liste produits : **45ms** (-95%)
-- Sequential scans : 950/jour (-89%)
-- Hit rate cache : 75-85%
+CREATE INDEX idx_suppliers_code ON suppliers(code);
+CREATE INDEX idx_suppliers_is_active ON suppliers(is_active);
+```
 
-**Pool de connexions** :
-- Size : 30 (le plus important)
-- Max overflow : 40
-- Total capacity : 70 connexions
-- Utilization moyenne : 50-60%
+#### product_prices
+
+```sql
+CREATE TABLE product_prices (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    supplier_id UUID REFERENCES suppliers(id),
+    price_type VARCHAR(50) NOT NULL DEFAULT 'retail',
+    price NUMERIC(10, 2) NOT NULL,
+    cost NUMERIC(10, 2),
+    margin NUMERIC(5, 2),
+    currency VARCHAR(3) DEFAULT 'EUR',
+    min_quantity INTEGER DEFAULT 1,
+    valid_from TIMESTAMP DEFAULT NOW(),
+    valid_until TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_product_prices_product_id ON product_prices(product_id);
+CREATE INDEX idx_product_prices_is_active ON product_prices(is_active);
+```
+
+#### product_stocks
+
+```sql
+CREATE TABLE product_stocks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    warehouse_id UUID,
+    quantity INTEGER NOT NULL DEFAULT 0,
+    reserved_quantity INTEGER DEFAULT 0,
+    available_quantity INTEGER GENERATED ALWAYS AS (quantity - reserved_quantity) STORED,
+    min_stock INTEGER DEFAULT 0,
+    last_update TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_product_stocks_product_id ON product_stocks(product_id);
+```
+
+#### categories & brands
+
+```sql
+CREATE TABLE categories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE,
+    parent_id UUID REFERENCES categories(id),
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE brands (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(50) UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    logo_url TEXT,
+    is_active BOOLEAN DEFAULT TRUE
+);
+```
 
 ---
 
-## db_imports - Gestion des Imports
+## db_imports - Operations d'Import
 
-### Schéma
+**Connection** : `postgresql+asyncpg://user:pass@host:5432/db_imports`
 
-**Tables principales** :
-- `import_configs` : Configurations par fournisseur
-- `import_jobs` : Jobs avec statuts (pending, running, completed, failed)
-- `import_logs` : Logs détaillés **partitionnés par mois**
-- `import_errors` : Erreurs et warnings
-- `import_files` : Métadonnées fichiers (référence MinIO)
-- `import_mappings` : Mappings colonnes CSV → champs produits
-- `import_schedules` : Planifications CRON
-- `import_statistics` : Statistiques agrégées par job
+**Pool** : 15 connexions (batch processing)
 
-### Index Critiques
+### Modeles Cles
+
+#### import_configs
 
 ```sql
--- Index le plus sollicité : statut des jobs
-CREATE INDEX CONCURRENTLY idx_import_jobs_status_created
-  ON import_jobs(status, created_at DESC);
-  -- Gain : 620ms → 50ms (-92%)
-  -- Fréquence : 120 req/min (le plus haut)
+CREATE TABLE import_configs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    supplier_code VARCHAR(50) NOT NULL,
+    import_type VARCHAR(50) NOT NULL,
+    config_name VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
 
--- Index logs par job
-CREATE INDEX CONCURRENTLY idx_import_logs_job_created_level
-  ON import_logs(job_id, created_at DESC, log_level);
-  -- Gain : 395ms → 40ms (-90%)
-  -- Fréquence : 200 req/min
+    -- Configuration (JSONB)
+    connection_config JSONB NOT NULL,  -- FTP, SFTP, Email, HTTP
+    schedule_config JSONB,
+
+    -- File handling
+    file_pattern VARCHAR(255),
+    file_format VARCHAR(50),  -- 'csv', 'xlsx', 'xml', 'json'
+    encoding VARCHAR(50) DEFAULT 'UTF-8',
+    delimiter VARCHAR(10) DEFAULT ';',
+
+    -- Mapping & Rules (JSONB)
+    field_mapping JSONB,
+    transformation_rules JSONB,
+    validation_rules JSONB,
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_import_configs_supplier_code ON import_configs(supplier_code);
+CREATE INDEX idx_import_configs_is_active ON import_configs(is_active);
 ```
 
-### Partitionnement
-
-**Table `import_logs` partitionnée par mois** :
+#### import_jobs
 
 ```sql
-CREATE TABLE import_logs (
-    id SERIAL,
-    job_id INTEGER NOT NULL,
-    log_level VARCHAR(20),
-    message TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-) PARTITION BY RANGE (created_at);
+CREATE TABLE import_jobs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    config_id UUID REFERENCES import_configs(id),
+    supplier_code VARCHAR(50) NOT NULL,
+    import_type VARCHAR(50) NOT NULL,
 
--- Partitions mensuelles
-CREATE TABLE import_logs_2025_01 PARTITION OF import_logs
-  FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
+    -- Statut
+    status VARCHAR(50) NOT NULL DEFAULT 'pending',
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    duration_seconds INTEGER,
 
-CREATE TABLE import_logs_2025_02 PARTITION OF import_logs
-  FOR VALUES FROM ('2025-02-01') TO ('2025-03-01');
+    -- Statistiques
+    total_rows INTEGER DEFAULT 0,
+    processed_rows INTEGER DEFAULT 0,
+    successful_rows INTEGER DEFAULT 0,
+    failed_rows INTEGER DEFAULT 0,
+    products_created INTEGER DEFAULT 0,
+    products_updated INTEGER DEFAULT 0,
+
+    -- Erreurs
+    error_count INTEGER DEFAULT 0,
+    last_error TEXT,
+
+    created_by UUID,  -- Reference cross-DB vers users
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_import_jobs_status ON import_jobs(status);
+CREATE INDEX idx_import_jobs_created_at ON import_jobs(created_at);
+CREATE INDEX idx_import_jobs_supplier_code ON import_jobs(supplier_code);
 ```
 
-**Avantages** :
-- Requêtes sur période récente ultra-rapides
-- Suppression anciens logs par DROP partition
-- Maintenance VACUUM ciblée par partition
+#### import_schedules
 
-### Performances
+```sql
+CREATE TABLE import_schedules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    config_id UUID REFERENCES import_configs(id),
+    cron_expression VARCHAR(100) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    last_run TIMESTAMP,
+    next_run TIMESTAMP
+);
+```
 
-**Dashboard imports** :
-- Avant : 620ms (p95)
-- Après : 50ms (p95) **-92%**
-- Cache TTL : 30 min (statuts changent souvent)
+#### mapping_templates
 
-**Pool de connexions** :
-- Size : 20
-- Max overflow : 40
-- Total capacity : 60 connexions
-- Batch processing optimisé
+```sql
+CREATE TABLE mapping_templates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    supplier_code VARCHAR(50),
+    field_mapping JSONB NOT NULL,
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
 
 ---
 
-## Database Optimizer
+## db_exports - Operations d'Export
 
-Le **DatabaseOptimizer** est un service d'optimisation automatique qui analyse et améliore les performances des 5 bases de données.
+**Connection** : `postgresql+asyncpg://user:pass@host:5432/db_exports`
 
-{% callout type="success" title="ROI Exceptionnel" %}
-**ROI : 2,257%** | **Économies : €66,000/an** | **Requêtes lentes : -85%**
-{% /callout %}
+**Pool** : 10 connexions (batch processing)
 
-### Fonctionnalités
+### Modeles Cles
 
-#### 1. Analyse des Requêtes Lentes
+#### export_platforms
 
-```python
-from api.services.database_optimizer import db_optimizer
-
-# Analyser les requêtes lentes d'une base
-slow_queries = await db_optimizer.analyze_slow_queries("catalog", limit=10)
-
-for query in slow_queries:
-    print(f"Query: {query.query}")
-    print(f"Avg time: {query.avg_time}s")
-    print(f"Call count: {query.call_count}")
-    print(f"Total time: {query.total_time}s")
+```sql
+CREATE TABLE export_platforms (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) UNIQUE NOT NULL,
+    platform_type VARCHAR(50) NOT NULL,  -- 'shopify', 'woocommerce', 'minio'
+    is_active BOOLEAN DEFAULT TRUE,
+    config JSONB NOT NULL,
+    field_mappings JSONB,
+    created_at TIMESTAMP DEFAULT NOW()
+);
 ```
 
-**Métriques collectées** :
-- Temps d'exécution moyen
-- Nombre d'appels
-- Temps total cumulé
-- Execution plan PostgreSQL
+#### export_jobs
 
-#### 2. Suggestions d'Index
-
-```python
-# Obtenir des suggestions d'index
-suggestions = await db_optimizer.suggest_indexes("catalog", table_name="products")
-
-for suggestion in suggestions:
-    print(f"Table: {suggestion.table_name}")
-    print(f"Columns: {suggestion.columns}")
-    print(f"SQL: {suggestion.create_sql}")
-    print(f"Benefit: {suggestion.estimated_benefit}")
+```sql
+CREATE TABLE export_jobs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    platform_id UUID REFERENCES export_platforms(id),
+    job_type VARCHAR(50) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'pending',
+    total_items INTEGER DEFAULT 0,
+    success_items INTEGER DEFAULT 0,
+    failed_items INTEGER DEFAULT 0,
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
+);
 ```
 
-**Heuristiques** :
-- Analyse des clauses WHERE fréquentes
-- Détection des foreign keys non indexées
-- Patterns ORDER BY + LIMIT
-- Jointures coûteuses
+#### export_job_items
 
-#### 3. Statistiques de Tables
-
-```python
-# Statistiques détaillées d'une table
-stats = await db_optimizer.get_table_stats("catalog", "products")
-
-print(f"Rows: {stats.row_count}")
-print(f"Size: {stats.size_bytes // (1024*1024)} MB")
-print(f"Sequential scans: {stats.seq_scan}")
-print(f"Index scans: {stats.idx_scan}")
-print(f"Live tuples: {stats.n_live_tup}")
-print(f"Dead tuples: {stats.n_dead_tup}")
+```sql
+CREATE TABLE export_job_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    job_id UUID REFERENCES export_jobs(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL,  -- Reference cross-DB
+    status VARCHAR(50) NOT NULL DEFAULT 'pending',
+    error_message TEXT,
+    exported_data JSONB,
+    response_data JSONB,
+    processed_at TIMESTAMP
+);
 ```
-
-#### 4. Maintenance PostgreSQL
-
-```python
-# Exécuter VACUUM ANALYZE
-result = await db_optimizer.vacuum_analyze("catalog", table_name="products")
-print(f"Success: {result['success']}")
-print(f"Execution time: {result['execution_time']}s")
-
-# Pour toute la base
-result = await db_optimizer.vacuum_analyze("catalog")
-```
-
-**Opérations** :
-- VACUUM : Récupère espace dead tuples
-- ANALYZE : Met à jour statistiques
-- REINDEX : Reconstruit index fragmentés
-
-### Impact Mesurable
-
-**Migration 005 : 15 index critiques**
-
-| Index | DB | Gain Temps | Fréquence | Impact/Jour |
-|-------|----|-----------:|-----------:|------------:|
-| idx_products_active_created_desc | catalog | -95% | 45/min | -36,000 ms |
-| idx_import_jobs_status_created | imports | -92% | 120/min | -82,080 ms |
-| idx_notifications_user_unread | analytics | -95% | 300/min | -81,000 ms |
-| idx_products_sku_active | catalog | -90% | 30/min | -16,200 ms |
-| idx_import_logs_job_created | imports | -90% | 200/min | -71,000 ms |
-
-**Total économisé/jour** : **-286,280 ms** (4h 46min)
 
 ---
 
-## Connection Pooling
+## db_media - Gestion Media
 
-### Configuration par Base
+**Connection** : `postgresql+asyncpg://user:pass@host:5432/db_media`
 
-```python
-# api/core/config_multidb.py
+**Pool** : 10 connexions
 
-# Global defaults
-DATABASE_POOL_SIZE = 20
-DATABASE_MAX_OVERFLOW = 40
-DATABASE_POOL_TIMEOUT = 30  # secondes
-DATABASE_POOL_RECYCLE = 3600  # 1h
-DATABASE_POOL_PRE_PING = True  # test connexions
+### Modeles Cles
 
-# Database-specific pools
-CATALOG_POOL_SIZE = 30      # Highest traffic
-MEDIA_POOL_SIZE = 15        # Upload/download
-IMPORTS_POOL_SIZE = 20      # Batch jobs
-CODE2ASIN_POOL_SIZE = 12    # External API
-ANALYTICS_POOL_SIZE = 10    # Reporting
+#### media_files
+
+```sql
+CREATE TABLE media_files (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id UUID,  -- Reference cross-DB (pas de FK)
+
+    -- Info fichier
+    file_name VARCHAR(500) NOT NULL,
+    file_hash VARCHAR(64) UNIQUE,  -- SHA-256 deduplication
+    mime_type VARCHAR(100),
+    file_size_bytes BIGINT,
+
+    -- Stockage MinIO
+    storage_type VARCHAR(50),  -- 'minio', 's3', 'local'
+    bucket_name VARCHAR(100),
+    object_key TEXT,
+    storage_url TEXT,
+
+    -- Metadonnees image
+    width INTEGER,
+    height INTEGER,
+    format VARCHAR(20),
+    image_type VARCHAR(50),
+
+    -- Display
+    display_order INTEGER DEFAULT 0,
+    is_primary BOOLEAN DEFAULT FALSE,
+    alt_text TEXT,
+
+    -- Statut
+    processing_status VARCHAR(50) DEFAULT 'pending',
+    is_valid BOOLEAN DEFAULT TRUE,
+
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_media_files_product_id ON media_files(product_id);
+CREATE INDEX idx_media_files_file_hash ON media_files(file_hash);
+CREATE INDEX idx_media_files_is_primary ON media_files(is_primary);
 ```
 
-### Capacité Totale
+#### media_thumbnails
 
-**Base** : 87 connexions
-**Max (with overflow)** : 282 connexions
+```sql
+CREATE TABLE media_thumbnails (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    media_file_id UUID REFERENCES media_files(id) ON DELETE CASCADE,
+    size_name VARCHAR(20) NOT NULL,  -- 'small', 'medium', 'large'
+    width INTEGER NOT NULL,
+    height INTEGER NOT NULL,
+    object_key TEXT NOT NULL,
+    storage_url TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
-| Database | Pool | Overflow | Max | Utilization |
-|----------|------|----------|-----|-------------|
-| catalog | 30 | 40 | 70 | 50-60% |
-| imports | 20 | 40 | 60 | 40-50% |
-| media | 15 | 40 | 55 | 30-40% |
-| code2asin | 12 | 40 | 52 | 20-30% |
-| analytics | 10 | 40 | 50 | 30-40% |
+CREATE INDEX idx_media_thumbnails_media_file_id ON media_thumbnails(media_file_id);
+```
 
-### Health Metrics
+---
 
-**Avant optimisation** :
-- Pool exhaustion risk : **92%**
-- Connection wait time : 500-1000ms
-- Timeouts : 15-20/jour
+## db_code2asin - Mapping Amazon
 
-**Après optimisation** :
-- Pool exhaustion risk : **0%**
-- Connection wait time : < 10ms
-- Timeouts : 0/jour
-- Utilization : 40-60% (sain)
+**Connection** : `postgresql+asyncpg://user:pass@host:5432/db_code2asin`
+
+**Pool** : 10 connexions (API-intensive)
+
+### Modeles Cles
+
+#### code2asin_jobs
+
+```sql
+CREATE TABLE code2asin_jobs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) DEFAULT 'Code2ASIN Job',
+    status VARCHAR(50) NOT NULL DEFAULT 'pending',
+    supplier_code VARCHAR(100),
+
+    -- Statistiques
+    total_codes INTEGER DEFAULT 0,
+    processed_codes INTEGER DEFAULT 0,
+    successful_conversions INTEGER DEFAULT 0,
+    failed_conversions INTEGER DEFAULT 0,
+    progress_percentage INTEGER DEFAULT 0,
+
+    -- Match Quality
+    exact_matches INTEGER DEFAULT 0,
+    fuzzy_matches INTEGER DEFAULT 0,
+    no_matches INTEGER DEFAULT 0,
+
+    -- Configuration
+    batch_size INTEGER DEFAULT 100,
+    retry_count INTEGER DEFAULT 0,
+    max_retries INTEGER DEFAULT 5,
+    search_config JSONB,
+
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_code2asin_jobs_status ON code2asin_jobs(status);
+CREATE INDEX idx_code2asin_jobs_supplier_code ON code2asin_jobs(supplier_code);
+```
+
+#### code2asin_results
+
+```sql
+CREATE TABLE code2asin_results (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    job_id UUID NOT NULL REFERENCES code2asin_jobs(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL,  -- Reference cross-DB
+    product_ean VARCHAR(255),
+    product_title VARCHAR(500),
+
+    -- Amazon Match
+    asin VARCHAR(20),
+    amazon_title TEXT,
+    match_confidence NUMERIC(5, 2),
+    match_type VARCHAR(50),  -- 'exact', 'partial', 'fuzzy', 'manual'
+
+    -- Amazon Data (JSONB)
+    amazon_data JSONB,
+    amazon_images JSONB,
+    amazon_price NUMERIC(10, 2),
+    amazon_currency VARCHAR(3) DEFAULT 'EUR',
+
+    -- Category & Ratings
+    amazon_category VARCHAR(255),
+    amazon_rating NUMERIC(3, 2),
+    amazon_review_count INTEGER,
+
+    processed_at TIMESTAMP DEFAULT NOW(),
+    is_verified BOOLEAN DEFAULT FALSE
+);
+
+CREATE INDEX idx_code2asin_results_job_id ON code2asin_results(job_id);
+CREATE INDEX idx_code2asin_results_product_id ON code2asin_results(product_id);
+CREATE INDEX idx_code2asin_results_asin ON code2asin_results(asin);
+```
+
+---
+
+## db_analytics - Analytics & Metriques
+
+**Connection** : `postgresql+asyncpg://user:pass@host:5432/db_analytics`
+
+**Pool** : 10 connexions (reporting)
+
+### Modeles Cles
+
+#### product_metrics
+
+```sql
+CREATE TABLE product_metrics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id UUID NOT NULL,  -- Reference cross-DB
+    date DATE NOT NULL,
+    view_count INTEGER DEFAULT 0,
+    sales_count INTEGER DEFAULT 0,
+    conversion_rate NUMERIC(5, 4),
+    revenue NUMERIC(12, 2),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### supplier_metrics
+
+```sql
+CREATE TABLE supplier_metrics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    supplier_id UUID NOT NULL,
+    date DATE NOT NULL,
+    products_count INTEGER DEFAULT 0,
+    imports_count INTEGER DEFAULT 0,
+    success_rate NUMERIC(5, 2),
+    avg_processing_time INTEGER
+);
+```
+
+#### import_metrics
+
+```sql
+CREATE TABLE import_metrics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    date DATE NOT NULL,
+    total_imports INTEGER DEFAULT 0,
+    successful_imports INTEGER DEFAULT 0,
+    failed_imports INTEGER DEFAULT 0,
+    total_products_processed INTEGER DEFAULT 0,
+    avg_processing_time INTEGER
+);
+```
+
+---
+
+## Connection Pooling (asyncpg)
+
+### Configuration
+
+```python
+# Parametres globaux
+DATABASE_POOL_TIMEOUT = 30       # 30s max attente
+DATABASE_POOL_RECYCLE = 3600     # Recycler apres 1h
+DATABASE_POOL_PRE_PING = True    # Tester connexions
+DATABASE_MAX_OVERFLOW = 10       # Connexions extra
+
+# Pools par base
+CORE_POOL_SIZE = 5
+CATALOG_POOL_SIZE = 20
+IMPORTS_POOL_SIZE = 15
+EXPORTS_POOL_SIZE = 10
+MEDIA_POOL_SIZE = 10
+CODE2ASIN_POOL_SIZE = 10
+ANALYTICS_POOL_SIZE = 10
+```
+
+### Capacite Totale
+
+| Database | Pool Base | Overflow | Max |
+|----------|-----------|----------|-----|
+| db_core | 5 | 10 | 15 |
+| db_catalog | 20 | 10 | 30 |
+| db_imports | 15 | 10 | 25 |
+| db_exports | 10 | 10 | 20 |
+| db_media | 10 | 10 | 20 |
+| db_code2asin | 10 | 10 | 20 |
+| db_analytics | 10 | 10 | 20 |
+
+**Total** : 80 base, 150 max
+
+---
+
+## Strategie Cross-Database
+
+### Pas de Foreign Keys entre Bases
+
+```sql
+-- Dans db_media
+CREATE TABLE media_files (
+    id UUID PRIMARY KEY,
+    product_id UUID NOT NULL,  -- Reference cross-DB, PAS de FK
+    ...
+);
+```
+
+### Validation Cross-DB
+
+```python
+@celery_app.task
+async def validate_cross_db_references():
+    """Verifier les enregistrements orphelins entre bases."""
+    async with db_router.session_scope("media") as media_db:
+        orphaned_media = await find_orphaned_media(media_db)
+
+    async with db_router.session_scope("imports") as imports_db:
+        orphaned_jobs = await find_orphaned_jobs(imports_db)
+
+    return {
+        "orphaned_media": len(orphaned_media),
+        "orphaned_jobs": len(orphaned_jobs)
+    }
+```
 
 ---
 
 ## Bonnes Pratiques
 
-### 1. Éviter les N+1 Queries
+### 1. Eviter les N+1 Queries
 
-{% callout type="warning" title="Anti-pattern N+1" %}
-Le problème N+1 est la **cause #1** de lenteur dans les applications ORM. Toujours utiliser eager loading.
-{% /callout %}
-
-**Mauvais** :
 ```python
-# 1 + N queries (1 + 250 = 251 queries)
+# Mauvais - N+1
 products = await db.execute(select(Product))
 for product in products:
-    supplier = await db.execute(
-        select(Supplier).where(Supplier.id == product.supplier_id)
-    )
-```
+    supplier = await db.execute(select(Supplier).where(Supplier.id == product.supplier_id))
 
-**Bon** :
-```python
-# 1 query avec JOIN
+# Bon - Eager loading
 products = await db.execute(
     select(Product).options(joinedload(Product.supplier))
 )
@@ -331,55 +706,31 @@ products = await db.execute(
 ### 2. Utiliser les Index Composites
 
 ```sql
--- Bon : index composite pour filtre + tri
+-- Index composite pour filtre + tri
 CREATE INDEX idx_products_active_created
 ON products(is_active, created_at DESC)
 WHERE is_active = true;
-
--- Moins bon : 2 index séparés
-CREATE INDEX idx_products_active ON products(is_active);
-CREATE INDEX idx_products_created ON products(created_at);
 ```
 
-### 3. Optimiser les Count()
-
-**Mauvais** :
-```python
-# SELECT * puis COUNT en Python
-products = await db.execute(select(Product))
-count = len(products.all())
-```
-
-**Bon** :
-```python
-# COUNT() en SQL
-count = await db.scalar(
-    select(func.count()).select_from(Product).where(Product.is_active)
-)
-```
-
-### 4. Cache Intelligent
+### 3. Cache Intelligent
 
 ```python
-from api.services.cache_service import cache
-
-# Cache avec TTL adapté
-@cache(ttl=7200, db="catalog", key="products:active")
+@cache(ttl=3600, key="products:active")
 async def get_active_products(db: AsyncSession):
     return await db.execute(
         select(Product).where(Product.is_active == True)
     )
 ```
 
-### 5. Batch Operations
+### 4. Batch Operations
 
 ```python
-# Bon : bulk insert
+# Bon - bulk insert
 products = [Product(name=f"Product {i}") for i in range(1000)]
 db.bulk_save_objects(products)
 await db.commit()
 
-# Mauvais : 1000 INSERT individuels
+# Mauvais - 1000 INSERT individuels
 for i in range(1000):
     product = Product(name=f"Product {i}")
     db.add(product)
@@ -388,50 +739,12 @@ for i in range(1000):
 
 ---
 
-## Monitoring
-
-### Métriques Clés
-
-**Performance queries** :
-- Slow queries count (> 1s)
-- Average query time par table
-- N+1 query detections
-- Missing index warnings
-
-**Connection pools** :
-- Pool utilization (%)
-- Connection wait time
-- Pool exhaustion events
-- Idle connections
-
-**Cache** :
-- Hit rate par DB
-- Miss rate
-- Eviction rate
-- Memory usage
-
-### Dashboards Grafana
-
-**Database Performance** :
-- Query latency (p50, p95, p99)
-- Slow queries trends
-- Index usage statistics
-- Table sizes evolution
-
-**Connection Pools** :
-- Active connections par DB
-- Pool utilization (%)
-- Wait time histogram
-- Exhaustion alerts
-
----
-
 ## Migration & Backup
 
 ### Migrations Alembic
 
 ```bash
-# Générer migration
+# Generer migration
 alembic revision --autogenerate -m "Add product_variants"
 
 # Appliquer migrations
@@ -441,30 +754,35 @@ alembic upgrade head
 alembic downgrade -1
 ```
 
-### Backup Strategy
+### Structure des Migrations
 
-**Automatique** :
-- Dump quotidien de chaque DB
-- Rétention : 30 jours
-- Stockage MinIO (bucket `backups`)
-
-```bash
-# Backup manuel d'une DB
-docker exec postgres-xxx pg_dump -U user db_catalog > backup_catalog.sql
-
-# Restore
-docker exec -i postgres-xxx psql -U user db_catalog < backup_catalog.sql
+```text
+migrations/
+├── catalog/
+│   ├── 001_initial_schema.sql
+│   ├── 002_add_product_indexes.sql
+├── core/
+│   ├── 001_create_users.sql
+├── media/
+│   ├── 001_create_media_files.sql
+├── imports/
+│   ├── 001_create_import_tables.sql
+├── exports/
+│   ├── 001_create_export_tables.sql
+├── code2asin/
+│   ├── 001_create_code2asin_tables.sql
+└── analytics/
+    ├── 001_create_analytics_tables.sql
 ```
 
 ---
 
 ## Ressources
 
-- [Architecture Multi-DB](/docs/technical/architecture)
+- [Architecture Technique](/docs/technical/architecture)
 - [Deployment Guide](/docs/technical/deployment)
 - [Security Architecture](/docs/technical/security)
-- [PostgreSQL Performance Tuning](https://www.postgresql.org/docs/current/performance-tips.html)
 
 {% callout type="info" title="Database en Production" %}
-Actuellement : **5 bases PostgreSQL**, **133,149 produits**, **282 connexions max**, **2,500 requêtes lentes/jour** (-85% vs v3.0.0)
+Actuellement : **7 bases PostgreSQL**, pools optimises par domaine, connexions asyncpg, cache Redis L1+L2
 {% /callout %}

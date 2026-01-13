@@ -1,11 +1,11 @@
 ---
 title: Architecture Technique
-description: Architecture multi-bases de données et infrastructure du système Suppliers-Import
+description: Architecture multi-bases de données et infrastructure du système ProductsManager
 ---
 
 # Architecture Technique
 
-L'architecture du système Suppliers-Import repose sur une approche moderne et scalable, conçue pour gérer efficacement de gros volumes de données produits tout en maintenant d'excellentes performances.
+L'architecture du systeme ProductsManager repose sur une approche moderne et scalable, concue pour gerer efficacement de gros volumes de donnees produits tout en maintenant d'excellentes performances.
 
 {% .lead %}
 
@@ -13,168 +13,254 @@ L'architecture du système Suppliers-Import repose sur une approche moderne et s
 
 ## Vue d'ensemble
 
-Le système utilise une **architecture multi-bases de données** avec 5 bases PostgreSQL spécialisées, permettant une optimisation fine des performances et une scalabilité horizontale par domaine fonctionnel.
+Le systeme utilise une **architecture multi-bases de donnees** avec 7 bases PostgreSQL specialisees, permettant une optimisation fine des performances et une scalabilite horizontale par domaine fonctionnel.
 
 ### Stack Technique
 
 **Backend**
-- **Framework** : FastAPI (Python 3.11)
-- **ORM** : SQLAlchemy 2.0 (async)
-- **API** : REST + WebSocket pour temps réel
-- **Workers** : Celery + Beat pour tâches asynchrones
+- **Framework** : FastAPI (Python 3.11+)
+- **ORM** : SQLAlchemy 2.0 (async avec asyncpg)
+- **API** : REST + WebSocket pour temps reel
+- **Workers** : Celery + Beat pour taches asynchrones
 
 **Frontend**
-- **Framework** : Next.js 15.5.4
-- **UI Library** : React 19.0.0
-- **Language** : TypeScript 5.7.2
-- **Styling** : Tailwind CSS
+- **Framework** : Next.js 15 (App Router)
+- **UI Library** : React 18
+- **Language** : TypeScript
+- **Styling** : Tailwind CSS, Shadcn UI
 
 **Infrastructure**
-- **Bases de données** : 5 x PostgreSQL 15
-- **Cache** : Redis 7.x
+- **Bases de donnees** : 7 x PostgreSQL (asyncpg connection pooling)
+- **Cache** : Redis 7.x (L1 + L2 caching)
 - **Stockage** : MinIO (S3-compatible)
 - **Reverse Proxy** : Traefik
+- **Deployment** : Docker, Coolify
 
 ---
 
-## Architecture Multi-DB
+## Architecture 7-Databases
 
-{% callout type="success" title="Performance NUCLEAR" %}
-L'architecture multi-bases a permis de réduire les requêtes lentes de **-85%** (16,370 → 2,500/jour) et d'éliminer complètement les problèmes de N+1 queries.
+{% callout type="success" title="Performance Multi-DB" %}
+L'architecture multi-bases a permis de reduire les requetes lentes de **-85%** et d'eliminer completement les problemes de contention de tables et de pool exhaustion.
 {% /callout %}
 
-### Les 5 bases spécialisées
+### Pourquoi 7 bases de donnees ?
 
-#### 1. **db_catalog** - Catalogue Produits
-**Pool de connexions : 30** (le plus important)
+**Problemes avec une base monolithique :**
+- Contention de verrous (imports bloquant les requetes catalogue)
+- Patterns de charge mixtes (OLTP vs OLAP)
+- Difficulte a scaler des domaines specifiques
+- Strategies de backup/restore complexes
+- Point unique de defaillance
 
-Stocke toutes les données relatives aux produits et fournisseurs :
+**Solution : Separation par domaine fonctionnel**
 
-- `products` : Catalogue principal (133,149 produits)
-- `suppliers` : Fournisseurs et leurs configurations
-- `categories` : Arborescence de catégories
-- `brands` : Marques produits
-- `product_images` : Références images
-- `product_variants` : Variantes et déclinaisons
-- `price_history` : Historique des prix
-- `stock_history` : Historique des stocks
+### Les 7 bases specialisees
 
-**Optimisations** :
-- Index composite sur `(is_active, created_at DESC)`
-- Index sur `(sku, is_active, title)` pour recherches
-- Pool de 30 connexions (plus fort trafic)
-
-#### 2. **db_imports** - Gestion des Imports
-**Pool de connexions : 20**
-
-Gère tout le workflow d'import de données fournisseurs :
-
-- `import_configs` : Configurations par fournisseur
-- `import_jobs` : Jobs d'import avec statuts
-- `import_logs` : Logs détaillés (partitionnés par mois)
-- `import_errors` : Erreurs et warnings
-- `import_files` : Fichiers importés (référence MinIO)
-- `import_mappings` : Mappings de colonnes
-- `import_schedules` : Planifications CRON
-- `import_statistics` : Statistiques agrégées
-
-**Optimisations** :
-- Index sur `(status, created_at DESC)` pour dashboards
-- Index sur `(job_id, created_at DESC, log_level)` pour logs
-- Partitionnement mensuel des logs
-
-#### 3. **db_media** - Gestion Média
-**Pool de connexions : 15**
-
-Stockage des métadonnées de fichiers (images, documents) :
-
-- `media_files` : Métadonnées fichiers
-- `media_thumbnails` : Vignettes générées
-- `media_metadata` : EXIF, dimensions, etc.
-- `media_processing_jobs` : Jobs de traitement images
-
-**Optimisations** :
-- Références vers buckets MinIO (pas de blobs en DB)
-- Cache Redis 1h sur métadonnées
-- Traitement async des images
-
-#### 4. **db_code2asin** - Mapping Amazon
-**Pool de connexions : 12**
-
-Correspondance codes fournisseurs → ASIN Amazon :
-
-- `code2asin_jobs` : Jobs de mapping
-- `code2asin_results` : Résultats de recherche
-- `code2asin_history` : Historique des matchs
-- `code2asin_suppliers` : Config par fournisseur
-- `code2asin_statistics` : Métriques de matching
-
-**Optimisations** :
-- Cache Redis 24h sur mappings stables
-- Rate limiting sur API Amazon
-- Pool dédié pour appels externes
-
-#### 5. **db_analytics** - Analytics & Métriques
-**Pool de connexions : 10**
-
-Données analytiques et rapports :
-
-- `product_metrics` : Métriques produits
-- `supplier_metrics` : Performance fournisseurs
-- `import_metrics` : KPIs d'import
-- `search_analytics` : Analytics de recherche
-- `user_activity` : Logs d'activité
-- `performance_metrics` : Métriques système
-
-**Optimisations** :
-- Requêtes read-heavy optimisées
-- Agrégations pré-calculées
-- Cache 1h sur rapports
+| Base | Tables | Pool | Temps Moyen | Usage Principal |
+|------|--------|------|-------------|-----------------|
+| **db_core** | 5+ | 5 | <10ms | Auth, users, permissions, config systeme |
+| **db_catalog** | 40+ | 20 | <50ms | Produits, fournisseurs, categories, marques |
+| **db_imports** | 15+ | 15 | <40ms | Jobs d'import, configs, logs, schedules |
+| **db_exports** | 3+ | 10 | <20ms | Plateformes export, jobs, items |
+| **db_media** | 10+ | 10 | <30ms | Fichiers media, thumbnails, metadonnees |
+| **db_code2asin** | 8+ | 10 | <30ms | Mapping EAN/ASIN, donnees Amazon |
+| **db_analytics** | 12+ | 10 | <60ms | Metriques, rapports, analytics |
 
 ---
 
-## Stockage MinIO
+## db_core - Systeme Central
 
-Le système utilise **5 buckets MinIO** spécialisés pour le stockage distribué :
+**Purpose:** Authentication, authorization, configuration systeme, notifications
 
-### Organisation des buckets
+**Pool de connexions : 5** (volume faible, haute criticite)
 
-```text
-catalog-products/        → Images produits, fiches techniques
-  └── images/YYYY/MM/DD/
+**Tables principales :**
+- `users` - Comptes utilisateurs et profils
+- `roles` - Definitions de roles (RBAC)
+- `permissions` - Definitions de permissions
+- `user_roles` - Associations utilisateur-role
+- `role_permissions` - Associations role-permission
+- `notifications` - Notifications utilisateurs
+- `amazon_api_configs` - Credentials Amazon PA-API
+- `app_settings` - Parametres globaux application
 
-imports-files/          → Fichiers import CSV/Excel
-  └── imports/YYYY/MM/DD/
+**Caracteristiques :**
+- Faible volume d'ecriture (gestion utilisateurs)
+- Haut volume de lecture (authentification JWT)
+- Critique pour la disponibilite systeme
 
-media-images/           → Images processées, thumbnails
-  └── processed/
-  └── thumbnails/
+---
 
-code2asin-results/      → Résultats API Amazon
-  └── cache/YYYY/MM/
+## db_catalog - Catalogue Produits
 
-analytics-reports/      → Rapports générés, exports
-  └── exports/YYYY/MM/DD/
-```
+**Purpose:** Produits, fournisseurs, categories, marques, prix, stocks
 
-**Avantages** :
-- Stockage distribué et répliqué
-- Compatible S3 (migration facile)
-- CDN-ready pour images
-- Séparation claire par domaine
+**Pool de connexions : 20** (trafic le plus eleve)
+
+**Tables principales :**
+- `products` - Donnees produits principales (EAN, ASIN, SKU, titre, specs)
+- `suppliers` - Information fournisseurs
+- `categories` - Hierarchie de categories
+- `brands` - Information marques
+- `product_prices` - Prix produits (multi-type, multi-devise)
+- `product_stocks` - Niveaux de stock
+- `product_attributes` - Attributs flexibles
+- `product_categories` - Categories multi-taxonomie
+- `product_seo` - Metadonnees SEO
+- `product_variants` - Variantes produits
+- `supplier_products` - Associations fournisseur-produit
+- `product_bundles` - Bundles produits
+- `product_bundle_items` - Items de bundle
+
+**Caracteristiques :**
+- Plus haut volume de lecture (requetes produits)
+- Volume d'ecriture modere (imports, mises a jour)
+- Performance critique pour l'API
+
+---
+
+## db_imports - Operations d'Import
+
+**Purpose:** Configurations d'import, jobs, logs, schedules
+
+**Pool de connexions : 15** (traitement batch)
+
+**Tables principales :**
+- `import_configs` - Configurations sources par fournisseur
+- `import_jobs` - Tracking des jobs d'import
+- `import_logs` - Logs detailles (partitionnes par mois)
+- `import_errors` - Enregistrements d'erreurs
+- `import_files` - Metadonnees fichiers importes
+- `import_schedules` - Imports planifies (CRON)
+- `import_statistics` - Statistiques agregees
+- `mapping_templates` - Templates de mapping reutilisables
+
+**Caracteristiques :**
+- Haut volume d'ecriture pendant les imports
+- Volume de lecture modere (monitoring)
+- Append-only pour les logs
+
+---
+
+## db_exports - Operations d'Export
+
+**Purpose:** Configurations plateformes export, jobs, items
+
+**Pool de connexions : 10** (batch processing)
+
+**Tables principales :**
+- `export_platforms` - Configurations plateformes (Shopify, WooCommerce, etc.)
+- `export_jobs` - Tracking des jobs d'export
+- `export_job_items` - Statut export par produit
+
+**Caracteristiques :**
+- Volume d'ecriture modere (jobs export)
+- Faible volume de lecture (checks statut)
+- Focus sur le traitement batch
+
+---
+
+## db_media - Gestion Media
+
+**Purpose:** Metadonnees fichiers media, thumbnails, jobs de traitement
+
+**Pool de connexions : 10** (upload/download)
+
+**Tables principales :**
+- `media_files` - Metadonnees fichiers (reference vers MinIO)
+- `media_thumbnails` - Vignettes generees (small, medium, large)
+- `media_metadata` - EXIF et metadonnees techniques
+- `media_processing_jobs` - Taches de traitement background
+- `product_qrcodes` - QR codes produits
+
+**Caracteristiques :**
+- Volume lecture/ecriture modere
+- References vers stockage MinIO (pas de blobs en DB)
+- Traitement async des images
+
+---
+
+## db_code2asin - Mapping Amazon
+
+**Purpose:** Conversion EAN vers ASIN, cache donnees Amazon
+
+**Pool de connexions : 10** (API-intensive)
+
+**Tables principales :**
+- `code2asin_jobs` - Jobs de conversion batch
+- `code2asin_results` - Mappings ASIN et donnees Amazon
+- `code2asin_suppliers` - Configurations par fournisseur
+- `code2asin_statistics` - Statistiques de performance
+- `code2asin_logs` - Logs de traitement
+
+**Caracteristiques :**
+- Operations intensives en API externe
+- Haute valeur de cache (TTL 24h)
+- Rate limiting sur API Amazon
+
+---
+
+## db_analytics - Analytics & Metriques
+
+**Purpose:** Metriques, rapports, business intelligence
+
+**Pool de connexions : 10** (reporting)
+
+**Tables principales :**
+- `product_metrics` - Metriques performance produits
+- `supplier_metrics` - Performance fournisseurs
+- `import_metrics` - KPIs d'import
+- `search_analytics` - Analytics de recherche
+- `user_activity` - Logs d'activite utilisateurs
+- `performance_metrics` - Donnees performance systeme
+
+**Caracteristiques :**
+- Faible volume d'ecriture (jobs d'agregation)
+- Volume de lecture modere (dashboards)
+- Requetes analytiques (plus lentes)
 
 ---
 
 ## Database Router
 
-Le **DatabaseRouter** gère automatiquement le routage vers la bonne base de données selon le contexte.
+Le **DatabaseRouter** gere automatiquement le routage vers la bonne base de donnees selon le contexte.
 
-### Fonctionnement
+### Pattern Service Layer
+
+**Architecture : Router -> Service -> Database**
 
 ```python
-from core.database_router import get_catalog_db, get_imports_db
+# ROUTER LAYER: Concerns HTTP, validation, serialisation
+@router.get("/products/{product_id}")
+async def get_product(
+    product_id: UUID,
+    db: AsyncSession = Depends(get_catalog_db)
+):
+    product = await product_service.get_product(db, product_id)
+    return ProductResponse.model_validate(product)
 
-# Dans un endpoint FastAPI
+# SERVICE LAYER: Logique metier, caching, error handling
+class ProductService:
+    async def get_product(self, db: AsyncSession, product_id: UUID):
+        # Try cache first
+        cached = await cache_service.get(f"product:{product_id}")
+        if cached:
+            return cached
+
+        # Query database
+        product = await self._query_product(db, product_id)
+
+        # Store in cache
+        await cache_service.set(f"product:{product_id}", product, ttl=3600)
+        return product
+```
+
+### Injection de Dependances
+
+```python
+from core.database_router import get_catalog_db, get_imports_db, get_media_db
+
 @router.get("/products")
 async def get_products(db: AsyncSession = Depends(get_catalog_db)):
     # Utilise automatiquement db_catalog
@@ -188,270 +274,328 @@ async def get_imports(db: AsyncSession = Depends(get_imports_db)):
     return jobs
 ```
 
-### Mapping automatique
+### Mapping Automatique des Modeles
 
-Le router détecte automatiquement la base à utiliser selon :
-- Le modèle SQLAlchemy utilisé
-- Le endpoint appelé
-- Le contexte de la requête
-
-**Pools de connexions optimisés** :
-- 282 connexions simultanées possibles
-- Distribution selon charge par DB
-- Pool exhaustion : 0% (vs 92% avant optimisation)
+```python
+class DatabaseRouter:
+    db_mappings = {
+        "core": ["User", "Role", "Permission", "Notification", ...],
+        "catalog": ["Product", "Supplier", "Category", "Brand", ...],
+        "media": ["MediaFile", "MediaThumbnail", ...],
+        "imports": ["ImportConfig", "ImportJob", "ImportLog", ...],
+        "exports": ["ExportPlatform", "ExportJob", ...],
+        "code2asin": ["Code2ASINJob", "Code2ASINResult", ...],
+        "analytics": ["ProductMetrics", "SupplierMetrics", ...],
+    }
+```
 
 ---
 
-## Cache Strategy
+## Strategie Cross-Database
 
-Architecture **3 niveaux de cache** pour performances maximales :
+### Pas de Foreign Keys entre Bases
 
-### L1 - Cache Application (In-Memory)
-- FastAPI in-process cache
-- TTL très court (quelques secondes)
-- Données ultra-fréquentes
+Les bases de donnees sont isolees - **pas de contraintes de cle etrangere entre DBs**.
 
-### L2 - Cache Redis (Partagé)
-- Cache partagé entre instances
-- TTL adapté par type de données :
-  - **Catalog** : 2h (données stables)
-  - **Imports** : 30min (statuts changent vite)
-  - **Code2ASIN** : 24h (mappings stables)
-  - **Analytics** : 1h (rapports)
-  - **Media** : 1h (métadonnées)
+```sql
+-- Dans db_media
+CREATE TABLE media_files (
+    id UUID PRIMARY KEY,
+    product_id UUID NOT NULL,  -- Reference cross-DB (pas de FK)
+    ...
+);
+```
 
-### L3 - Cache PostgreSQL (Query Cache)
-- PostgreSQL query cache natif
-- Shared buffers optimisés
-- Statistiques maintenues à jour
+### Linking par UUID
 
-**Résultats** :
-- Hit rate Redis : 70-85% selon DB
-- Réduction charge DB : -70%
-- Temps réponse API : -50 à -80% sur cache hits
+Les entites sont liees par references UUID :
+- `MediaFile.product_id` -> `Product.id` (db_media -> db_catalog)
+- `ImportJob.created_by` -> `User.id` (db_imports -> db_core)
+- `Code2ASINResult.product_id` -> `Product.id` (db_code2asin -> db_catalog)
+
+### Consistance Eventuelle
+
+```python
+# Operations cross-DB sequentielles avec transactions compensatoires
+try:
+    # Step 1: Update catalog
+    async with db_router.session_scope("catalog") as catalog_db:
+        product.title = new_title
+        await catalog_db.commit()
+
+    # Step 2: Update media
+    async with db_router.session_scope("media") as media_db:
+        media.alt_text = new_title
+        await media_db.commit()
+except Exception:
+    # Transaction compensatoire: rollback catalog
+    async with db_router.session_scope("catalog") as catalog_db:
+        product.title = old_title
+        await catalog_db.commit()
+```
+
+---
+
+## Connection Pooling (asyncpg)
+
+### Configuration par Base
+
+```python
+# Pool sizes optimises par charge
+pool_sizes = {
+    "core": 5,       # Faible volume
+    "catalog": 20,   # Haut volume lecture
+    "media": 10,     # Volume modere
+    "imports": 15,   # Haut volume ecriture pendant imports
+    "exports": 10,   # Operations batch
+    "code2asin": 10, # API-intensive
+    "analytics": 10  # Requetes analytiques
+}
+
+# Parametres de pool
+DATABASE_POOL_TIMEOUT = 30       # 30s max attente connexion
+DATABASE_POOL_RECYCLE = 3600     # Recycler connexions apres 1h
+DATABASE_POOL_PRE_PING = True    # Tester connexions avant utilisation
+DATABASE_MAX_OVERFLOW = 10       # 10 connexions extra autorisees
+```
+
+### Avantages
+
+- Tailles de pool optimisees par charge
+- Pannes de connexion isolees
+- Meilleure utilisation des ressources
+- Overhead de connexion reduit
+
+---
+
+## Cache Strategy (Redis L1 + L2)
+
+### Architecture 3 Niveaux
+
+```text
+[API Request]
+     |
+     v
+[L1: In-Memory Cache] -- TTL: 60s, Taille limitee
+     |
+     v (Cache Miss)
+[L2: Redis Cache] -- TTL: Variable, Partage entre instances
+     |
+     v (Cache Miss)
+[PostgreSQL Database]
+```
+
+### Cache-Aside Pattern
+
+```python
+async def get_categories(db: AsyncSession) -> List[Category]:
+    # 1. Check cache
+    cache_key = "categories:all"
+    cached = await cache_service.get(cache_key)
+    if cached:
+        return cached
+
+    # 2. Query database
+    result = await db.execute(select(Category).where(Category.is_active == True))
+    categories = result.scalars().all()
+
+    # 3. Store in cache (1h TTL)
+    await cache_service.set(cache_key, categories, ttl=3600)
+    return categories
+```
+
+### TTL par Type de Donnees
+
+```python
+DEFAULT_TTLS = {
+    # Donnees haute-frequence, faible changement
+    "categories": 3600,        # 1 heure
+    "taxonomies": 7200,        # 2 heures
+    "brands": 3600,            # 1 heure
+
+    # Donnees frequence moyenne
+    "products": 1800,          # 30 minutes
+    "suppliers": 1800,         # 30 minutes
+
+    # Donnees haute-frequence, changement frequent
+    "enrichment_stats": 300,   # 5 minutes
+    "import_jobs": 300,        # 5 minutes
+    "export_jobs": 300,        # 5 minutes
+
+    # Donnees longue duree
+    "code2asin_mappings": 86400,  # 24 heures
+    "amazon_product_data": 43200, # 12 heures
+
+    # Donnees courte duree
+    "search_results": 300,     # 5 minutes
+    "api_rate_limits": 60,     # 1 minute
+}
+```
+
+---
+
+## Celery Background Tasks
+
+### Architecture des Queues
+
+```text
+[Celery Beat Scheduler]
+         |
+         v
+[Redis Broker] --> [imports queue] --> [Import Workers x4]
+         |
+         +--> [exports queue] --> [Export Workers x2]
+         |
+         +--> [code2asin queue] --> [Code2ASIN Workers x3]
+         |
+         +--> [catalog queue] --> [Catalog Workers x2]
+         |
+         +--> [media queue] --> [Media Workers x2]
+```
+
+### Routage des Taches
+
+```python
+app.conf.task_routes = {
+    "api.services.import_tasks.*": {"queue": "imports"},
+    "api.services.export_tasks.*": {"queue": "exports"},
+    "api.services.catalog_service.*": {"queue": "catalog"},
+    "api.services.media_service.*": {"queue": "media"},
+    "api.services.code2asin_service.*": {"queue": "code2asin"},
+}
+```
+
+### Taches Planifiees (Beat)
+
+```python
+app.conf.beat_schedule = {
+    "poll-ftp-imports": {
+        "task": "api.services.import_tasks.poll_ftp_imports",
+        "schedule": 3600.0,  # Toutes les heures
+    },
+    "poll-email-imports": {
+        "task": "api.services.import_tasks.poll_email_imports",
+        "schedule": 900.0,  # Toutes les 15 minutes
+    },
+    "check-scheduled-imports": {
+        "task": "api.services.import_tasks.process_scheduled_imports",
+        "schedule": 300.0,  # Toutes les 5 minutes
+    },
+    "cleanup-orphaned-files": {
+        "task": "api.services.export_tasks.cleanup_orphaned_exports",
+        "schedule": 86400.0,  # Quotidien
+    },
+}
+```
+
+### Retry avec Backoff Exponentiel
+
+```python
+@celery_app.task(bind=True, max_retries=5, default_retry_delay=60)
+def process_import_file(self, job_id: str):
+    try:
+        result = import_service.process(job_id)
+        return result
+    except RecoverableError as exc:
+        # Backoff: 1min, 5min, 15min, 1h, 4h
+        delay = min(60 * (5 ** self.request.retries), 14400)
+        raise self.retry(exc=exc, countdown=delay)
+```
+
+---
+
+## MinIO Object Storage
+
+### Organisation des Buckets
+
+```text
+product-images/          --> Images produits
+  └── products/{uuid[0:2]}/{product_id}/{hash}.jpg
+
+imports/                 --> Fichiers import CSV/Excel
+  └── YYYY/MM/DD/
+
+exports/                 --> Fichiers export generes
+  └── YYYY/MM/DD/
+
+code2asin-cache/         --> Cache resultats Amazon
+  └── YYYY/MM/
+```
+
+### UUID Sharding pour Media
+
+**Structure** : `products/{uuid[0:2]}/{product_id}/{hash}.jpg`
+
+- 256 sous-repertoires (00-ff) pour scalabilite
+- Support de 200k+ produits
+- Acces direct via presigned URLs
+
+### Systeme de Thumbnails
+
+3 tailles generees automatiquement :
+- **small** : 150x150 px
+- **medium** : 300x300 px
+- **large** : 800x800 px
 
 ---
 
 ## Performances
 
-{% callout type="success" title="Score Performance Global" %}
-**92/100** - Excellent (Audit v3.2.1)
-{% /callout %}
-
-### Métriques clés
+### Metriques Cles
 
 **Frontend**
-- Bundle size : **113 MB** (-83.7% vs v3.0.0)
-- Build time : **1m 52s**
-- Code splitting : **191 chunks** optimisés
-- First Load JS : **486 kB** (excellent pour React/Next.js)
+- Bundle size : optimise avec code splitting
+- Build time : ~2 minutes
+- First Load JS : <500 kB
 
 **Backend**
-- Requêtes lentes : **2,500/jour** (-85%)
-- Dashboard p95 : **400ms** (vs 1.8s avant)
-- Notifications p95 : **50ms** (vs 190ms avant)
-- Pool exhaustion : **0%** (vs 92% avant)
+- Requetes lentes : -85% apres migration multi-DB
+- Dashboard p95 : ~400ms
+- Pool exhaustion : 0%
 
 **Database**
-- 15 index composites critiques
-- N+1 queries : **100% éliminées**
-- Connection pools : 282 connexions
-- Query cache hit rate : 70-85%
+- N+1 queries : 100% eliminees (eager loading)
+- Index composites : 15+ critiques
+- Cache hit rate : 70-85%
 
-### Optimisations majeures
+### Cibles de Temps de Reponse
 
-**Database Optimizer**
-- ROI : **2,257%**
-- Économies : **€66,000/an**
-- Analyse automatique des requêtes lentes
-- Suggestions d'index intelligentes
-
-**Lazy Loading**
-- 86% des composants optimisés
-- React.memo : 75 instances
-- useMemo/useCallback : 75 instances
-- Librairies lourdes (recharts) split en 6+ chunks
+| Operation | Cible | P95 | P99 |
+|-----------|-------|-----|-----|
+| Product read (cached) | <10ms | <20ms | <50ms |
+| Product read (DB) | <50ms | <100ms | <200ms |
+| Product write | <100ms | <200ms | <500ms |
+| Search query | <100ms | <300ms | <1s |
+| Bulk import (1000 produits) | <30s | <60s | <120s |
 
 ---
 
-## Diagrammes d'Architecture
+## Monitoring & Observabilite
 
-### C4 Level 1 : Context Système
+### Health Checks
 
-```mermaid
-graph TB
-    Users[Web Users] --> SIS[Supplier Import System]
-    Admin[Admin Users] --> SIS
-    Suppliers[External Suppliers] --> SIS
+- `/health` - Liveness API
+- `/health/db` - Connectivite base de donnees (7 DBs)
+- `/health/redis` - Connectivite Redis
+- `/health/celery` - Statut workers
 
-    SIS --> PostgreSQL[(5 PostgreSQL DBs)]
-    SIS --> Redis[(Redis Cache)]
-    SIS --> MinIO[(MinIO Storage)]
-    SIS --> Amazon[Amazon MWS/SP-API]
+### Metriques
 
-    SIS --> Prometheus[Prometheus]
-    SIS --> Sentry[Sentry]
-    Prometheus --> Grafana[Grafana]
-```
-
-### C4 Level 2 : Containers
-
-**Couches applicatives** :
-- **Frontend Layer** : React Web App (Next.js 15)
-- **Gateway Layer** : Traefik Reverse Proxy
-- **Application Layer** : FastAPI + Celery Workers + WebSocket
-- **Database Layer** : 5 PostgreSQL spécialisées
-- **Cache & Storage** : Redis + MinIO
-- **Monitoring** : Prometheus + Grafana + Sentry
-
----
-
-## Scalabilité
-
-### Scaling Horizontal
-
-**FastAPI** : Multiple instances derrière Traefik
-- Load balancing automatique
-- Session sticky via Redis
-- Health checks toutes les 30s
-
-**Celery Workers** : Pool scaling dynamique
-- Scaling basé sur longueur queue
-- Worker max tasks : 100
-- Prefetch multiplier : 1
-
-**PostgreSQL** : Read replicas pour analytics
-- Master-slave replication
-- Read queries vers replicas
-- Write queries vers master
-
-**Redis** : Cluster mode disponible
-- High availability
-- Automatic failover
-- Sentinel monitoring
-
-### Scaling Vertical
-
-**Pools de connexions** :
-- Ajustables par DB selon charge
-- Max overflow : 40 par pool
-- Total capacity : 282 → 482 connexions
-
-**Cache sizing** :
-- Redis max memory : configurable
-- Eviction policy : allkeys-lru
-- Persistence : RDB + AOF
-
----
-
-## Monitoring & Observabilité
-
-### Prometheus Metrics
-
-**Métriques collectées** :
-- Business : Taux succès imports, temps processing
-- Technical : Pool utilization, response times
-- Infrastructure : CPU, RAM, disk usage
-- Custom : DNS resolution, cache hit rates
-
-**Fréquence** : 15 secondes
-**Rétention** : 30 jours
-
-### Grafana Dashboards
-
-**Dashboards disponibles** :
-- Business Intelligence : KPIs, trends, forecasting
-- Technical Operations : Infrastructure health
-- Security Monitoring : Auth, access patterns
-- Performance Analysis : Response times, throughput
-
-### Sentry Error Tracking
-
-**Intégrations** :
-- FastAPI exception handling
-- Celery task failures
-- Database connection errors
-- External API failures
-
-**Features** :
-- Real-time alerting
-- Performance monitoring (APM)
-- Release tracking
-- Context enrichment (user, request, etc.)
-
----
-
-## Déploiement
-
-Le système est déployé via **Docker Compose** avec orchestration **Coolify** :
-
-**Containers principaux** :
-- `api` : FastAPI application
-- `frontend` : Next.js web app
-- `celery` : Background workers
-- `celery-beat` : Scheduler
-- `postgres` : 5 databases
-- `redis` : Cache & broker
-- `minio` : Object storage
-- `traefik` : Reverse proxy
-
-**Features** :
-- Multi-stage builds (optimisation taille images)
-- Health checks sur tous les containers
-- Auto-restart on failure
-- Let's Encrypt SSL automatique
-- Zero-downtime deployments
-
----
-
-## Bonnes Pratiques
-
-### Performance
-
-1. **Toujours utiliser eager loading** pour éviter N+1 :
-```python
-products = await db.execute(
-    select(Product).options(joinedload(Product.supplier))
-)
-```
-
-2. **Cache les requêtes fréquentes** avec TTL adapté :
-```python
-@cache(ttl=3600, key="dashboard_stats")
-async def get_dashboard_stats():
-    ...
-```
-
-3. **Utiliser les index composites** pour filtres combinés :
-```sql
-CREATE INDEX idx_products_active_created
-ON products(is_active, created_at DESC);
-```
-
-### Scalabilité
-
-1. **Choisir la bonne DB** via le DatabaseRouter
-2. **Pools optimisés** selon charge par DB
-3. **Async par défaut** pour I/O operations
-4. **Batch operations** pour imports volumineux
-
-### Monitoring
-
-1. **Logs structurés** avec contexte enrichi
-2. **Métriques business** en plus des métriques techniques
-3. **Alertes proactives** sur seuils critiques
-4. **Dashboards temps réel** pour diagnostic rapide
+- Prometheus metrics endpoint
+- Histogrammes duree requetes
+- Performance queries database
+- Taux de cache hit
+- Longueurs queues Celery
 
 ---
 
 ## Ressources
 
-- [C4 Diagrams complets](/docs/technical/architecture/c4-diagrams)
-- [Database Optimizer Guide](/docs/technical/database)
+- [Database Schema](/docs/technical/database)
 - [Deployment Guide](/docs/technical/deployment)
 - [Security Architecture](/docs/technical/security)
 - [Performance Baseline](/docs/technical/performance)
 
 {% callout type="info" title="Architecture en Production" %}
-Cette architecture supporte actuellement **133,149 produits** avec des temps de réponse p95 < 500ms et un taux de disponibilité de 99.9%.
+Cette architecture supporte actuellement des dizaines de milliers de produits avec des temps de reponse p95 < 500ms et un taux de disponibilite de 99.9%.
 {% /callout %}
