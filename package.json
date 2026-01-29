@@ -21,7 +21,7 @@
     "@headlessui/react": "^2.2.6",
     "@markdoc/markdoc": "^0.5.2",
     "@markdoc/next.js": "^0.5.0",
-    "@sindresorhus/slugify": "^2.2.1",
+    "@sindresorhus/slugify": "^3.0.0",
     "@tailwindcss/postcss": "^4.1.17",
     "@tailwindcss/typography": "^0.5.16",
     "@types/react-highlight-words": "^0.20.0",
