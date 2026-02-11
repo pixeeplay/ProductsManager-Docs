@@ -5,13 +5,13 @@ description: Architecture multi-bases de données et infrastructure du système 
 
 # Architecture Technique
 
-L'architecture du systeme ProductsManager repose sur une approche moderne et scalable, concue pour gerer efficacement de gros volumes de donnees produits tout en maintenant d'excellentes performances.
+L’architecture du systeme ProductsManager repose sur une approche moderne et scalable, concue pour gerer efficacement de gros volumes de donnees produits tout en maintenant d’excellentes performances.
 
 {% .lead %}
 
 ---
 
-## Vue d'ensemble
+## Vue d’ensemble
 
 Le systeme utilise une **architecture multi-bases de donnees** avec 7 bases PostgreSQL specialisees, permettant une optimisation fine des performances et une scalabilite horizontale par domaine fonctionnel.
 
@@ -33,15 +33,21 @@ Le systeme utilise une **architecture multi-bases de donnees** avec 7 bases Post
 - **Bases de donnees** : 7 x PostgreSQL (asyncpg connection pooling)
 - **Cache** : Redis 7.x (L1 + L2 caching)
 - **Stockage** : MinIO (S3-compatible)
+- **Recherche** : Meilisearch (moteur de recherche full-text)
 - **Reverse Proxy** : Traefik
-- **Deployment** : Docker, Coolify
+- **Deployment** : Docker, Coolify (auto-deploy on push)
+
+**Modules & Outils**
+- **17 modules** enregistres et activables via `/settings/modules`
+- **8 serveurs MCP** avec 42 outils pour agents IA (JSON-RPC 2.0 over stdio)
+- **47+ routeurs API** REST
 
 ---
 
 ## Architecture 7-Databases
 
 {% callout type="success" title="Performance Multi-DB" %}
-L'architecture multi-bases a permis de reduire les requetes lentes de **-85%** et d'eliminer completement les problemes de contention de tables et de pool exhaustion.
+L’architecture multi-bases a permis de reduire les requetes lentes de **-85%** et d’eliminer completement les problemes de contention de tables et de pool exhaustion.
 {% /callout %}
 
 ### Pourquoi 7 bases de donnees ?
@@ -59,13 +65,13 @@ L'architecture multi-bases a permis de reduire les requetes lentes de **-85%** e
 
 | Base | Tables | Pool | Temps Moyen | Usage Principal |
 |------|--------|------|-------------|-----------------|
-| **db_core** | 5+ | 5 | <10ms | Auth, users, permissions, config systeme |
-| **db_catalog** | 40+ | 20 | <50ms | Produits, fournisseurs, categories, marques |
-| **db_imports** | 15+ | 15 | <40ms | Jobs d'import, configs, logs, schedules |
-| **db_exports** | 3+ | 10 | <20ms | Plateformes export, jobs, items |
+| **db_core** | 5+ | 5 | <10ms | Auth, users, permissions, config systeme, app_settings, odoo_*, prestashop_* |
+| **db_catalog** | 40+ | 20 | <50ms | Produits, categories, marques, prix, icecat_*, taxonomy_*, competitor_blacklist |
+| **db_imports** | 15+ | 15 | <40ms | Jobs d’import, configs, logs, schedules, mapping templates |
+| **db_suppliers** | 5+ | 10 | <20ms | Donnees fournisseurs etendues, supplier_ean_resolutions |
 | **db_media** | 10+ | 10 | <30ms | Fichiers media, thumbnails, metadonnees |
 | **db_code2asin** | 8+ | 10 | <30ms | Mapping EAN/ASIN, donnees Amazon |
-| **db_analytics** | 12+ | 10 | <60ms | Metriques, rapports, analytics |
+| **db_analytics** | 12+ | 10 | <60ms | Rapports, audit_logs, ai_usage_logs, user_activity, rate_limit_violations |
 
 ---
 
@@ -83,10 +89,12 @@ L'architecture multi-bases a permis de reduire les requetes lentes de **-85%** e
 - `role_permissions` - Associations role-permission
 - `notifications` - Notifications utilisateurs
 - `amazon_api_configs` - Credentials Amazon PA-API
-- `app_settings` - Parametres globaux application
+- `app_settings` - Parametres globaux application (inclut config modules)
+- `odoo_*` - Tables de configuration Odoo ERP
+- `prestashop_*` - Tables de configuration PrestaShop
 
 **Caracteristiques :**
-- Faible volume d'ecriture (gestion utilisateurs)
+- Faible volume d’ecriture (gestion utilisateurs)
 - Haut volume de lecture (authentification JWT)
 - Critique pour la disponibilite systeme
 
@@ -94,16 +102,15 @@ L'architecture multi-bases a permis de reduire les requetes lentes de **-85%** e
 
 ## db_catalog - Catalogue Produits
 
-**Purpose:** Produits, fournisseurs, categories, marques, prix, stocks
+**Purpose:** Produits, categories, marques, prix, stocks, donnees Icecat
 
 **Pool de connexions : 20** (trafic le plus eleve)
 
 **Tables principales :**
 - `products` - Donnees produits principales (EAN, ASIN, SKU, titre, specs)
-- `suppliers` - Information fournisseurs
 - `categories` - Hierarchie de categories
-- `brands` - Information marques
-- `product_prices` - Prix produits (multi-type, multi-devise)
+- `brands` - Information marques (harmonisation, aliases, doublons)
+- `product_prices` - Prix produits (multi-type, multi-devise) via modele ProductPrice
 - `product_stocks` - Niveaux de stock
 - `product_attributes` - Attributs flexibles
 - `product_categories` - Categories multi-taxonomie
@@ -111,53 +118,56 @@ L'architecture multi-bases a permis de reduire les requetes lentes de **-85%** e
 - `product_variants` - Variantes produits
 - `supplier_products` - Associations fournisseur-produit
 - `product_bundles` - Bundles produits
-- `product_bundle_items` - Items de bundle
+- `competitor_blacklist` - Blacklist concurrents (Price Monitor)
+- `icecat_*` - Tables Icecat enrichment
+- `taxonomy_*` - Tables taxonomie categories
+- `category_*` - Tables categories manager
 
 **Caracteristiques :**
 - Plus haut volume de lecture (requetes produits)
-- Volume d'ecriture modere (imports, mises a jour)
-- Performance critique pour l'API
+- Volume d’ecriture modere (imports, mises a jour)
+- Performance critique pour l’API
 
 ---
 
-## db_imports - Operations d'Import
+## db_imports - Operations d’Import
 
-**Purpose:** Configurations d'import, jobs, logs, schedules
+**Purpose:** Configurations d’import, jobs, logs, schedules
 
 **Pool de connexions : 15** (traitement batch)
 
 **Tables principales :**
 - `import_configs` - Configurations sources par fournisseur
-- `import_jobs` - Tracking des jobs d'import
+- `import_jobs` - Tracking des jobs d’import
 - `import_logs` - Logs detailles (partitionnes par mois)
-- `import_errors` - Enregistrements d'erreurs
+- `import_errors` - Enregistrements d’erreurs
 - `import_files` - Metadonnees fichiers importes
 - `import_schedules` - Imports planifies (CRON)
 - `import_statistics` - Statistiques agregees
-- `mapping_templates` - Templates de mapping reutilisables
+- `mapping_templates` - Templates de mapping reutilisables (avec attributs calcules)
 
 **Caracteristiques :**
-- Haut volume d'ecriture pendant les imports
+- Haut volume d’ecriture pendant les imports
 - Volume de lecture modere (monitoring)
 - Append-only pour les logs
 
 ---
 
-## db_exports - Operations d'Export
+## db_suppliers - Donnees Fournisseurs
 
-**Purpose:** Configurations plateformes export, jobs, items
+**Purpose:** Donnees fournisseurs etendues, resolutions EAN
 
-**Pool de connexions : 10** (batch processing)
+**Pool de connexions : 10** (operations cross-DB)
 
 **Tables principales :**
-- `export_platforms` - Configurations plateformes (Shopify, WooCommerce, etc.)
-- `export_jobs` - Tracking des jobs d'export
-- `export_job_items` - Statut export par produit
+- `suppliers` - Information fournisseurs (code, nom, contact, config)
+- `supplier_ean_resolutions` - Resolutions EAN cross-base
+- `supplier_configs` - Configurations etendues par fournisseur
 
 **Caracteristiques :**
-- Volume d'ecriture modere (jobs export)
-- Faible volume de lecture (checks statut)
-- Focus sur le traitement batch
+- Volume modere d’ecriture
+- Utilisee en conjonction avec db_catalog et db_imports
+- Pattern 3-sessions pour les handlers d’import
 
 ---
 
@@ -203,20 +213,24 @@ L'architecture multi-bases a permis de reduire les requetes lentes de **-85%** e
 
 ## db_analytics - Analytics & Metriques
 
-**Purpose:** Metriques, rapports, business intelligence
+**Purpose:** Metriques, rapports, business intelligence, audit
 
 **Pool de connexions : 10** (reporting)
 
 **Tables principales :**
+- `audit_logs` - Logs d’audit complets
+- `ai_usage_logs` - Suivi utilisation IA (tokens, couts, providers)
+- `user_activity` - Logs d’activite utilisateurs
+- `rate_limit_violations` - Violations de rate limiting
 - `product_metrics` - Metriques performance produits
 - `supplier_metrics` - Performance fournisseurs
-- `import_metrics` - KPIs d'import
+- `import_metrics` - KPIs d’import
 - `search_analytics` - Analytics de recherche
-- `user_activity` - Logs d'activite utilisateurs
 - `performance_metrics` - Donnees performance systeme
+- `price_check_logs` - Logs de verification prix (Price Monitor)
 
 **Caracteristiques :**
-- Faible volume d'ecriture (jobs d'agregation)
+- Faible volume d’ecriture (jobs d’agregation)
 - Volume de lecture modere (dashboards)
 - Requetes analytiques (plus lentes)
 
@@ -256,6 +270,16 @@ class ProductService:
         return product
 ```
 
+### Import Handler Sessions (3-session pattern)
+
+```python
+# Pattern specifique pour les imports cross-DB
+async with db_router.session_scope("imports") as imports_session:
+    async with db_router.session_scope("catalog") as catalog_session:
+        async with db_router.session_scope("suppliers") as suppliers_session:
+            handler = ManualImportHandler(imports_session, catalog_session, suppliers_session)
+```
+
 ### Injection de Dependances
 
 ```python
@@ -280,12 +304,12 @@ async def get_imports(db: AsyncSession = Depends(get_imports_db)):
 class DatabaseRouter:
     db_mappings = {
         "core": ["User", "Role", "Permission", "Notification", ...],
-        "catalog": ["Product", "Supplier", "Category", "Brand", ...],
+        "catalog": ["Product", "Category", "Brand", "ProductPrice", ...],
         "media": ["MediaFile", "MediaThumbnail", ...],
         "imports": ["ImportConfig", "ImportJob", "ImportLog", ...],
-        "exports": ["ExportPlatform", "ExportJob", ...],
+        "suppliers": ["Supplier", "SupplierEanResolution", ...],
         "code2asin": ["Code2ASINJob", "Code2ASINResult", ...],
-        "analytics": ["ProductMetrics", "SupplierMetrics", ...],
+        "analytics": ["AuditLog", "AiUsageLog", "UserActivity", ...],
     }
 ```
 
@@ -347,7 +371,7 @@ pool_sizes = {
     "catalog": 20,   # Haut volume lecture
     "media": 10,     # Volume modere
     "imports": 15,   # Haut volume ecriture pendant imports
-    "exports": 10,   # Operations batch
+    "suppliers": 10, # Operations cross-DB
     "code2asin": 10, # API-intensive
     "analytics": 10  # Requetes analytiques
 }
@@ -552,6 +576,7 @@ code2asin-cache/         --> Cache resultats Amazon
 - Requetes lentes : -85% apres migration multi-DB
 - Dashboard p95 : ~400ms
 - Pool exhaustion : 0%
+- **8 553 tests** passent (100% taux de reussite)
 
 **Database**
 - N+1 queries : 100% eliminees (eager loading)
@@ -565,7 +590,7 @@ code2asin-cache/         --> Cache resultats Amazon
 | Product read (cached) | <10ms | <20ms | <50ms |
 | Product read (DB) | <50ms | <100ms | <200ms |
 | Product write | <100ms | <200ms | <500ms |
-| Search query | <100ms | <300ms | <1s |
+| Search query (Meilisearch) | <50ms | <100ms | <300ms |
 | Bulk import (1000 produits) | <30s | <60s | <120s |
 
 ---
@@ -597,5 +622,5 @@ code2asin-cache/         --> Cache resultats Amazon
 - [Performance Baseline](/docs/technical/performance)
 
 {% callout type="info" title="Architecture en Production" %}
-Cette architecture supporte actuellement des dizaines de milliers de produits avec des temps de reponse p95 < 500ms et un taux de disponibilite de 99.9%.
+Cette architecture supporte actuellement des dizaines de milliers de produits avec des temps de reponse p95 < 500ms et un taux de disponibilite de 99.9%. Version actuelle : v4.5.58 avec 17 modules, 8 serveurs MCP et 47+ routeurs API.
 {% /callout %}

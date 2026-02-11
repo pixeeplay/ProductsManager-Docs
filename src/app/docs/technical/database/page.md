@@ -1,6 +1,6 @@
 ---
 title: Base de Donnees
-description: Architecture 7 bases de donnees, modeles cles et optimisations
+description: Architecture 7 bases de données, modèles clés et optimisations
 ---
 
 # Base de Donnees
@@ -13,23 +13,23 @@ Le systeme ProductsManager utilise une architecture multi-bases de donnees Postg
 
 ## Architecture 7 Bases de Donnees
 
-L'architecture repose sur **7 bases PostgreSQL specialisees**, avec des pools de connexions dedies via asyncpg.
+L’architecture repose sur **7 bases PostgreSQL specialisees**, avec des pools de connexions dedies via asyncpg.
 
 {% callout type="success" title="Impact Performance" %}
 Migration vers multi-DB : **-85% requetes lentes**, **0% pool exhaustion**, isolation des pannes par domaine
 {% /callout %}
 
-### Vue d'ensemble
+### Vue d’ensemble
 
 | Base | Tables | Pool | Temps Moyen | Usage Principal |
 |------|--------|------|-------------|-----------------|
-| **db_core** | 5+ | 5 | <10ms | Auth, users, permissions, config |
-| **db_catalog** | 40+ | 20 | <50ms | Produits, fournisseurs, categories |
-| **db_imports** | 15+ | 15 | <40ms | Jobs d'import, configs, logs |
-| **db_exports** | 3+ | 10 | <20ms | Plateformes export, jobs |
+| **db_core** | 5+ | 5 | <10ms | Auth, users, permissions, config, odoo_*, prestashop_* |
+| **db_catalog** | 40+ | 20 | <50ms | Produits, categories, marques, prix, icecat_* |
+| **db_imports** | 15+ | 15 | <40ms | Jobs d’import, configs, logs, mapping templates |
+| **db_suppliers** | 5+ | 10 | <20ms | Donnees fournisseurs etendues, EAN resolutions |
 | **db_media** | 10+ | 10 | <30ms | Fichiers media, thumbnails |
 | **db_code2asin** | 8+ | 10 | <30ms | Mapping EAN/ASIN Amazon |
-| **db_analytics** | 12+ | 10 | <60ms | Metriques, rapports |
+| **db_analytics** | 12+ | 10 | <60ms | Audit logs, AI usage, metriques, rapports |
 
 ---
 
@@ -51,12 +51,12 @@ CREATE TABLE users (
     hashed_password VARCHAR(255) NOT NULL,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
-    role VARCHAR(50) NOT NULL DEFAULT 'user',
+    role VARCHAR(50) NOT NULL DEFAULT ’user’,
     is_active BOOLEAN DEFAULT TRUE,
     is_verified BOOLEAN DEFAULT FALSE,
     is_superuser BOOLEAN DEFAULT FALSE,
     is_admin BOOLEAN DEFAULT FALSE,
-    permissions JSONB NOT NULL DEFAULT '{}',
+    permissions JSONB NOT NULL DEFAULT ’{}’,
     last_login TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -79,14 +79,29 @@ CREATE TABLE roles (
 CREATE TABLE permissions (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
-    resource VARCHAR(100),  -- 'product', 'supplier', 'import'
-    action VARCHAR(50)      -- 'create', 'read', 'update', 'delete'
+    resource VARCHAR(100),  -- ’product’, ’supplier’, ’import’
+    action VARCHAR(50)      -- ’create’, ’read’, ’update’, ’delete’
 );
 
 CREATE TABLE role_permissions (
     role_id INTEGER REFERENCES roles(id),
     permission_id INTEGER REFERENCES permissions(id),
     PRIMARY KEY (role_id, permission_id)
+);
+```
+
+#### app_settings
+
+```sql
+CREATE TABLE app_settings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    category VARCHAR(100) NOT NULL,  -- ’modules’, ’general’, ’notifications’
+    key VARCHAR(255) NOT NULL,
+    value JSONB NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(category, key)
 );
 ```
 
@@ -98,11 +113,11 @@ CREATE TABLE notifications (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
-    type VARCHAR(50) NOT NULL,  -- 'info', 'success', 'warning', 'error'
+    type VARCHAR(50) NOT NULL,  -- ’info’, ’success’, ’warning’, ’error’
     read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    expires_at TIMESTAMP DEFAULT (NOW() + INTERVAL '7 days'),
-    metadata JSONB NOT NULL DEFAULT '{}'
+    expires_at TIMESTAMP DEFAULT (NOW() + INTERVAL ’7 days’),
+    metadata JSONB NOT NULL DEFAULT ’{}’
 );
 
 CREATE INDEX idx_notifications_user_id ON notifications(user_id);
@@ -145,7 +160,7 @@ CREATE TABLE products (
     brand_id UUID REFERENCES brands(id),
 
     -- Statut
-    status VARCHAR(50) DEFAULT 'active',
+    status VARCHAR(50) DEFAULT ’active’,
     is_active BOOLEAN DEFAULT TRUE,
 
     -- Dimensions & Poids
@@ -170,26 +185,6 @@ CREATE INDEX idx_products_is_active ON products(is_active);
 CREATE INDEX idx_products_created_at ON products(created_at);
 ```
 
-#### suppliers
-
-```sql
-CREATE TABLE suppliers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    code VARCHAR(50) NOT NULL UNIQUE,
-    name VARCHAR(255) NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    contact_email VARCHAR(255),
-    contact_phone VARCHAR(50),
-    address TEXT,
-    country VARCHAR(2) DEFAULT 'FR',
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE INDEX idx_suppliers_code ON suppliers(code);
-CREATE INDEX idx_suppliers_is_active ON suppliers(is_active);
-```
-
 #### product_prices
 
 ```sql
@@ -197,11 +192,11 @@ CREATE TABLE product_prices (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     supplier_id UUID REFERENCES suppliers(id),
-    price_type VARCHAR(50) NOT NULL DEFAULT 'retail',
+    price_type VARCHAR(50) NOT NULL DEFAULT ’retail’,
     price NUMERIC(10, 2) NOT NULL,
     cost NUMERIC(10, 2),
     margin NUMERIC(5, 2),
-    currency VARCHAR(3) DEFAULT 'EUR',
+    currency VARCHAR(3) DEFAULT ’EUR’,
     min_quantity INTEGER DEFAULT 1,
     valid_from TIMESTAMP DEFAULT NOW(),
     valid_until TIMESTAMP,
@@ -211,23 +206,6 @@ CREATE TABLE product_prices (
 
 CREATE INDEX idx_product_prices_product_id ON product_prices(product_id);
 CREATE INDEX idx_product_prices_is_active ON product_prices(is_active);
-```
-
-#### product_stocks
-
-```sql
-CREATE TABLE product_stocks (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-    warehouse_id UUID,
-    quantity INTEGER NOT NULL DEFAULT 0,
-    reserved_quantity INTEGER DEFAULT 0,
-    available_quantity INTEGER GENERATED ALWAYS AS (quantity - reserved_quantity) STORED,
-    min_stock INTEGER DEFAULT 0,
-    last_update TIMESTAMP DEFAULT NOW()
-);
-
-CREATE INDEX idx_product_stocks_product_id ON product_stocks(product_id);
 ```
 
 #### categories & brands
@@ -252,7 +230,7 @@ CREATE TABLE brands (
 
 ---
 
-## db_imports - Operations d'Import
+## db_imports - Operations d’Import
 
 **Connection** : `postgresql+asyncpg://user:pass@host:5432/db_imports`
 
@@ -276,9 +254,9 @@ CREATE TABLE import_configs (
 
     -- File handling
     file_pattern VARCHAR(255),
-    file_format VARCHAR(50),  -- 'csv', 'xlsx', 'xml', 'json'
-    encoding VARCHAR(50) DEFAULT 'UTF-8',
-    delimiter VARCHAR(10) DEFAULT ';',
+    file_format VARCHAR(50),  -- ’csv’, ’xlsx’, ’xml’, ’json’
+    encoding VARCHAR(50) DEFAULT ’UTF-8’,
+    delimiter VARCHAR(10) DEFAULT ’;’,
 
     -- Mapping & Rules (JSONB)
     field_mapping JSONB,
@@ -303,7 +281,7 @@ CREATE TABLE import_jobs (
     import_type VARCHAR(50) NOT NULL,
 
     -- Statut
-    status VARCHAR(50) NOT NULL DEFAULT 'pending',
+    status VARCHAR(50) NOT NULL DEFAULT ’pending’,
     started_at TIMESTAMP,
     completed_at TIMESTAMP,
     duration_seconds INTEGER,
@@ -329,19 +307,6 @@ CREATE INDEX idx_import_jobs_created_at ON import_jobs(created_at);
 CREATE INDEX idx_import_jobs_supplier_code ON import_jobs(supplier_code);
 ```
 
-#### import_schedules
-
-```sql
-CREATE TABLE import_schedules (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    config_id UUID REFERENCES import_configs(id),
-    cron_expression VARCHAR(100) NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    last_run TIMESTAMP,
-    next_run TIMESTAMP
-);
-```
-
 #### mapping_templates
 
 ```sql
@@ -350,6 +315,9 @@ CREATE TABLE mapping_templates (
     name VARCHAR(255) NOT NULL,
     supplier_code VARCHAR(50),
     field_mapping JSONB NOT NULL,
+    mapping_config JSONB,        -- Configuration avancee
+    default_values JSONB,        -- Valeurs par defaut
+    computed_attributes JSONB,   -- Attributs calcules (depuis v4.5.44)
     is_default BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW()
 );
@@ -357,57 +325,45 @@ CREATE TABLE mapping_templates (
 
 ---
 
-## db_exports - Operations d'Export
+## db_suppliers - Donnees Fournisseurs
 
-**Connection** : `postgresql+asyncpg://user:pass@host:5432/db_exports`
+**Connection** : `postgresql+asyncpg://user:pass@host:5432/db_suppliers`
 
-**Pool** : 10 connexions (batch processing)
+**Pool** : 10 connexions
 
 ### Modeles Cles
 
-#### export_platforms
+#### suppliers
 
 ```sql
-CREATE TABLE export_platforms (
+CREATE TABLE suppliers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) UNIQUE NOT NULL,
-    platform_type VARCHAR(50) NOT NULL,  -- 'shopify', 'woocommerce', 'minio'
+    code VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
-    config JSONB NOT NULL,
-    field_mappings JSONB,
-    created_at TIMESTAMP DEFAULT NOW()
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(50),
+    address TEXT,
+    country VARCHAR(2) DEFAULT ’FR’,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE INDEX idx_suppliers_code ON suppliers(code);
+CREATE INDEX idx_suppliers_is_active ON suppliers(is_active);
 ```
 
-#### export_jobs
+#### supplier_ean_resolutions
 
 ```sql
-CREATE TABLE export_jobs (
+CREATE TABLE supplier_ean_resolutions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    platform_id UUID REFERENCES export_platforms(id),
-    job_type VARCHAR(50) NOT NULL,
-    status VARCHAR(50) NOT NULL DEFAULT 'pending',
-    total_items INTEGER DEFAULT 0,
-    success_items INTEGER DEFAULT 0,
-    failed_items INTEGER DEFAULT 0,
-    started_at TIMESTAMP,
-    completed_at TIMESTAMP,
+    supplier_code VARCHAR(50) NOT NULL,
+    original_ean VARCHAR(50),
+    resolved_ean VARCHAR(20),
+    resolution_method VARCHAR(50),
+    confidence NUMERIC(5, 2),
     created_at TIMESTAMP DEFAULT NOW()
-);
-```
-
-#### export_job_items
-
-```sql
-CREATE TABLE export_job_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    job_id UUID REFERENCES export_jobs(id) ON DELETE CASCADE,
-    product_id UUID NOT NULL,  -- Reference cross-DB
-    status VARCHAR(50) NOT NULL DEFAULT 'pending',
-    error_message TEXT,
-    exported_data JSONB,
-    response_data JSONB,
-    processed_at TIMESTAMP
 );
 ```
 
@@ -435,7 +391,7 @@ CREATE TABLE media_files (
     file_size_bytes BIGINT,
 
     -- Stockage MinIO
-    storage_type VARCHAR(50),  -- 'minio', 's3', 'local'
+    storage_type VARCHAR(50),  -- ’minio’, ’s3’, ’local’
     bucket_name VARCHAR(100),
     object_key TEXT,
     storage_url TEXT,
@@ -452,7 +408,7 @@ CREATE TABLE media_files (
     alt_text TEXT,
 
     -- Statut
-    processing_status VARCHAR(50) DEFAULT 'pending',
+    processing_status VARCHAR(50) DEFAULT ’pending’,
     is_valid BOOLEAN DEFAULT TRUE,
 
     created_at TIMESTAMP DEFAULT NOW()
@@ -469,7 +425,7 @@ CREATE INDEX idx_media_files_is_primary ON media_files(is_primary);
 CREATE TABLE media_thumbnails (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     media_file_id UUID REFERENCES media_files(id) ON DELETE CASCADE,
-    size_name VARCHAR(20) NOT NULL,  -- 'small', 'medium', 'large'
+    size_name VARCHAR(20) NOT NULL,  -- ’small’, ’medium’, ’large’
     width INTEGER NOT NULL,
     height INTEGER NOT NULL,
     object_key TEXT NOT NULL,
@@ -495,8 +451,8 @@ CREATE INDEX idx_media_thumbnails_media_file_id ON media_thumbnails(media_file_i
 ```sql
 CREATE TABLE code2asin_jobs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) DEFAULT 'Code2ASIN Job',
-    status VARCHAR(50) NOT NULL DEFAULT 'pending',
+    name VARCHAR(255) DEFAULT ’Code2ASIN Job’,
+    status VARCHAR(50) NOT NULL DEFAULT ’pending’,
     supplier_code VARCHAR(100),
 
     -- Statistiques
@@ -540,13 +496,13 @@ CREATE TABLE code2asin_results (
     asin VARCHAR(20),
     amazon_title TEXT,
     match_confidence NUMERIC(5, 2),
-    match_type VARCHAR(50),  -- 'exact', 'partial', 'fuzzy', 'manual'
+    match_type VARCHAR(50),  -- ’exact’, ’partial’, ’fuzzy’, ’manual’
 
     -- Amazon Data (JSONB)
     amazon_data JSONB,
     amazon_images JSONB,
     amazon_price NUMERIC(10, 2),
-    amazon_currency VARCHAR(3) DEFAULT 'EUR',
+    amazon_currency VARCHAR(3) DEFAULT ’EUR’,
 
     -- Category & Ratings
     amazon_category VARCHAR(255),
@@ -572,7 +528,54 @@ CREATE INDEX idx_code2asin_results_asin ON code2asin_results(asin);
 
 ### Modeles Cles
 
-#### product_metrics
+#### audit_logs
+
+```sql
+CREATE TABLE audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID,
+    action VARCHAR(100) NOT NULL,
+    resource_type VARCHAR(100),
+    resource_id VARCHAR(255),
+    details JSONB,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### ai_usage_logs
+
+```sql
+CREATE TABLE ai_usage_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID,
+    provider VARCHAR(50) NOT NULL,  -- ’openai’, ’anthropic’
+    model VARCHAR(100) NOT NULL,
+    operation VARCHAR(100),
+    tokens_input INTEGER DEFAULT 0,
+    tokens_output INTEGER DEFAULT 0,
+    cost_usd NUMERIC(10, 6),
+    duration_ms INTEGER,
+    status VARCHAR(50),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### rate_limit_violations
+
+```sql
+CREATE TABLE rate_limit_violations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID,
+    endpoint VARCHAR(255),
+    tier VARCHAR(50),
+    ip_address VARCHAR(45),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### product_metrics & supplier_metrics
 
 ```sql
 CREATE TABLE product_metrics (
@@ -585,11 +588,7 @@ CREATE TABLE product_metrics (
     revenue NUMERIC(12, 2),
     created_at TIMESTAMP DEFAULT NOW()
 );
-```
 
-#### supplier_metrics
-
-```sql
 CREATE TABLE supplier_metrics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     supplier_id UUID NOT NULL,
@@ -597,20 +596,6 @@ CREATE TABLE supplier_metrics (
     products_count INTEGER DEFAULT 0,
     imports_count INTEGER DEFAULT 0,
     success_rate NUMERIC(5, 2),
-    avg_processing_time INTEGER
-);
-```
-
-#### import_metrics
-
-```sql
-CREATE TABLE import_metrics (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    date DATE NOT NULL,
-    total_imports INTEGER DEFAULT 0,
-    successful_imports INTEGER DEFAULT 0,
-    failed_imports INTEGER DEFAULT 0,
-    total_products_processed INTEGER DEFAULT 0,
     avg_processing_time INTEGER
 );
 ```
@@ -632,7 +617,7 @@ DATABASE_MAX_OVERFLOW = 10       # Connexions extra
 CORE_POOL_SIZE = 5
 CATALOG_POOL_SIZE = 20
 IMPORTS_POOL_SIZE = 15
-EXPORTS_POOL_SIZE = 10
+SUPPLIERS_POOL_SIZE = 10
 MEDIA_POOL_SIZE = 10
 CODE2ASIN_POOL_SIZE = 10
 ANALYTICS_POOL_SIZE = 10
@@ -645,7 +630,7 @@ ANALYTICS_POOL_SIZE = 10
 | db_core | 5 | 10 | 15 |
 | db_catalog | 20 | 10 | 30 |
 | db_imports | 15 | 10 | 25 |
-| db_exports | 10 | 10 | 20 |
+| db_suppliers | 10 | 10 | 20 |
 | db_media | 10 | 10 | 20 |
 | db_code2asin | 10 | 10 | 20 |
 | db_analytics | 10 | 10 | 20 |
@@ -672,7 +657,7 @@ CREATE TABLE media_files (
 ```python
 @celery_app.task
 async def validate_cross_db_references():
-    """Verifier les enregistrements orphelins entre bases."""
+    \"\"\"Verifier les enregistrements orphelins entre bases.\"\"\"
     async with db_router.session_scope("media") as media_db:
         orphaned_media = await find_orphaned_media(media_db)
 
@@ -767,8 +752,8 @@ migrations/
 │   ├── 001_create_media_files.sql
 ├── imports/
 │   ├── 001_create_import_tables.sql
-├── exports/
-│   ├── 001_create_export_tables.sql
+├── suppliers/
+│   ├── 001_create_supplier_tables.sql
 ├── code2asin/
 │   ├── 001_create_code2asin_tables.sql
 └── analytics/
@@ -784,5 +769,5 @@ migrations/
 - [Security Architecture](/docs/technical/security)
 
 {% callout type="info" title="Database en Production" %}
-Actuellement : **7 bases PostgreSQL**, pools optimises par domaine, connexions asyncpg, cache Redis L1+L2
+Actuellement : **7 bases PostgreSQL** (db_core, db_catalog, db_imports, db_suppliers, db_media, db_code2asin, db_analytics), pools optimises par domaine, connexions asyncpg, cache Redis L1+L2. Version : v4.5.58.
 {% /callout %}

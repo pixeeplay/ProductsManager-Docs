@@ -20,6 +20,22 @@ export const navigation = [
     ],
   },
   {
+    title: 'Modules',
+    links: [
+      { title: 'Systeme de Modules', href: '/docs/modules/module-system' },
+      { title: 'Fournisseurs', href: '/docs/modules/suppliers' },
+      { title: 'Imports', href: '/docs/modules/imports' },
+      { title: 'Exports', href: '/docs/modules/exports' },
+      { title: 'AI Enrichment', href: '/docs/modules/ai-enrichment' },
+      { title: 'Price Monitor', href: '/docs/modules/price-monitor' },
+      { title: 'Brand Manager', href: '/docs/modules/brand-manager' },
+      { title: 'Categories Manager', href: '/docs/modules/categories-manager' },
+      { title: 'Search Engine', href: '/docs/modules/search-engine' },
+      { title: 'Completude', href: '/docs/modules/completeness' },
+      { title: 'File Explorer', href: '/docs/modules/file-explorer' },
+    ],
+  },
+  {
     title: 'User Guides',
     links: [
       { title: 'Getting Started', href: '/docs/user-guides/getting-started' },
@@ -55,6 +71,20 @@ export const navigation = [
     ],
   },
   {
+    title: 'MCP & AI',
+    links: [
+      { title: 'MCP Overview', href: '/docs/mcp/overview' },
+      { title: 'MCP Servers', href: '/docs/mcp/servers' },
+      { title: 'AI Providers', href: '/docs/mcp/ai-providers' },
+    ],
+  },
+  {
+    title: 'Data Model',
+    links: [
+      { title: 'Product Model', href: '/docs/data-model/product' },
+    ],
+  },
+  {
     title: 'Integrations',
     links: [
       { title: 'Odoo ERP', href: '/docs/integrations/odoo' },
@@ -69,8 +99,8 @@ export const navigation = [
   {
     title: 'FAQ & Support',
     links: [
-      { title: 'FAQ', href: '/docs/faq-support/faq' },
-      { title: 'Troubleshooting', href: '/docs/faq-support/troubleshooting' },
+      { title: 'FAQ', href: '/docs/support/faq' },
+      { title: 'Troubleshooting', href: '/docs/support/troubleshooting' },
     ],
   },
   {
@@ -78,6 +108,7 @@ export const navigation = [
     links: [
       { title: 'Changelog', href: '/docs/releases/changelog' },
       { title: 'v4.5.0', href: '/docs/releases/v4-5-0' },
+      { title: 'v3.3.0', href: '/docs/releases/v3-3-0' },
       { title: 'v3.2.0', href: '/docs/releases/v3-2-0' },
       { title: 'Migration Guides', href: '/docs/releases/migration-guides' },
       { title: 'Roadmap', href: '/docs/releases/roadmap' },

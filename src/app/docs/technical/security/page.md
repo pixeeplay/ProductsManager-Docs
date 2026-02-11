@@ -5,7 +5,7 @@ description: RBAC, authentification, sécurité des API et conformité
 
 # Sécurité
 
-Le système Suppliers-Import implémente une architecture de sécurité multi-couche avec RBAC granulaire, JWT, et une protection complète contre les vulnérabilités OWASP Top 10.
+Le système ProductsManager implémente une architecture de sécurité multi-couche avec RBAC granulaire, JWT, et une protection complète contre les vulnérabilités OWASP Top 10.
 
 {% .lead %}
 
@@ -13,8 +13,8 @@ Le système Suppliers-Import implémente une architecture de sécurité multi-co
 
 ## Score de Sécurité
 
-{% callout type="success" title="Audit Sécurité v3.2.1" %}
-**Score Global : 87/100 (B+)** | **0 CVE critiques** | **93.4% endpoints protégés** | **29 permissions granulaires**
+{% callout type="success" title="Audit Sécurité v4.5.58" %}
+**Score Global : 91/100 (A)** | **0 CVE critiques** | **93.4% endpoints protégés** | **29 permissions granulaires** | **8 553 tests passent (100%)**
 {% /callout %}
 
 ### Métriques Clés
@@ -30,7 +30,7 @@ Le système Suppliers-Import implémente une architecture de sécurité multi-co
 | **API Security** | 9.0/10 | Excellent |
 | **OWASP Compliance** | 8.9/10 | Excellent |
 
-**Evolution** : +15 points (+20.8%) depuis v3.0.0
+**Evolution** : +19 points (+26.4%) depuis v3.0.0
 
 ---
 
@@ -159,11 +159,11 @@ user.permissions = {
 ### Couverture RBAC
 
 **Endpoints protégés** :
-- Total endpoints : **196**
-- Protégés par RBAC : **171** (87.2%)
-- Permission-based : **102** (52%)
-- User-based : **69** (35%)
-- Public (intentionnel) : **25** (12.8%)
+- Total endpoints : **250+**
+- Protégés par RBAC : **230+** (92%)
+- Permission-based : **150+** (60%)
+- User-based : **80+** (32%)
+- Public (intentionnel) : **20** (8%)
 
 **Endpoints publics** :
 - `/health`, `/health/ready`, `/health/live`
@@ -536,6 +536,57 @@ class Settings(BaseSettings):
 
 ---
 
+## Verrouillage de Compte (Account Lockout)
+
+Depuis v4.5.51, le système implémente un verrouillage automatique de compte :
+
+- **5 tentatives échouées** : Compte verrouillé pendant 15 minutes
+- **10 tentatives** : Verrouillage pendant 1 heure
+- **20 tentatives** : Verrouillage permanent (déverrouillage admin requis)
+- **Notification admin** : Alerte automatique après 5 tentatives échouées
+- **Logs détaillés** : Toutes les tentatives sont enregistrées dans `audit_logs` (db_analytics)
+
+---
+
+## Système de Permissions avec Rate Limiting
+
+Le système RBAC utilise un décorateur `@require_permission` avec des tiers de rate limiting associés :
+
+```python
+from api.core.permissions import require_permission, Permission
+from api.core.rate_limits import get_rate_limit, RateLimitTier
+
+@router.get("/products")
+@require_permission(Permission.READ_PRODUCTS)
+@limiter.limit(get_rate_limit(RateLimitTier.READ_STANDARD))
+async def list_products(request: Request):
+    ...
+```
+
+Les permissions sont organisées par module et vérifiées à 3 niveaux :
+1. **Rôle de base** : Permissions héritées du rôle (admin, manager, user, api_client)
+2. **Permissions JSON** : Surcharges par utilisateur dans le champ `permissions` JSONB
+3. **Modules actifs** : Les endpoints des modules désactivés retournent 404
+
+---
+
+## Rate Limiting par Tiers
+
+Le rate limiting est organisé en 4 niveaux (Critical, High, Medium, Low) :
+
+| Tier | Limite | Exemples |
+|------|--------|----------|
+| AUTH_LOGIN | 5/min | Login, register, password reset |
+| BULK_IMPORT | 500/min | Imports/exports en masse |
+| AI_BATCH | 1/heure | Enrichissement IA batch |
+| WRITE_STANDARD | 100/min | Operations d'écriture |
+| READ_STANDARD | 1000/min | Lectures standard |
+| HEALTH_CHECK | 1000/min | Endpoints publics |
+
+Les violations sont enregistrées dans `rate_limit_violations` (db_analytics).
+
+Voir [Rate Limiting](/docs/api/rate-limiting) pour la documentation complète.
+
 ## Audit des Dépendances
 
 ### Backend (Python)
@@ -571,7 +622,7 @@ pip-audit
 ```json
 {
   "next": "15.5.4",
-  "react": "19.0.0",
+  "react": "18.3.1",
   "zod": "^3.24.1"
 }
 ```
@@ -787,5 +838,5 @@ sentry_sdk.init(
 - [FastAPI Security](https://fastapi.tiangolo.com/tutorial/security/)
 
 {% callout type="info" title="Sécurité en Production" %}
-**Score : 87/100 (B+)** | **171/196 endpoints protégés** | **0 CVE critiques** | **Audit prochain : Avril 2026**
+**Score : 91/100 (A)** | **230+/250+ endpoints protégés** | **0 CVE critiques** | **178 tests sécurité backend (Sprint 2)** | **Audit prochain : Avril 2026**
 {% /callout %}

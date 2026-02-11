@@ -14,6 +14,238 @@ Le format est base sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 
 ## Versions recentes
 
+### [v4.5.58] - 11 Fevrier 2026
+
+**Sprint 9 : 100% Tests Backend**
+
+- Correction des 25 derniers echecs de tests backend
+- **8 553 tests passent, 0 echecs (100%)**
+- 2 bugfixes production supplementaires
+- Mise a jour audit et tracking de couverture
+
+---
+
+### [v4.5.56] - Fevrier 2026
+
+**Sprint 7+8 : Tests Backend + Refactoring Frontend**
+
+- 290 nouveaux tests backend (5 services)
+- Refactoring 87 fichiers tests frontend (MSW vers vi.fn())
+- 8 278 tests frontend passent (100%)
+- 96 echecs backend repares (Sprint 8)
+- 5 bugfixes production (Sprint 8)
+
+---
+
+### [v4.5.55] - Janvier 2026
+
+**Sprint 6 : Tests Services Backend**
+
+- 409 tests pour 7 services backend (settings, completeness, reports, search, batch enrichment, PrestaShop, Odoo)
+- Couverture tests etendue
+
+---
+
+### [v4.5.54] - Janvier 2026
+
+**Sprint 5 : Tests Frontend Composants**
+
+- 76 tests frontend (PremiumSidebar + PremiumDataTable)
+- Amelioration couverture composants critiques
+
+---
+
+### [v4.5.53] - Janvier 2026
+
+**Sprint 4 : Tests Pipeline Import/Export**
+
+- 169 tests pipeline import/export
+- Tests orchestrator, job service, error archive, EAN lookup
+
+---
+
+### [v4.5.52] - Janvier 2026
+
+**Sprint 3 : Tests Cache & Performance**
+
+- 153 tests cache et performance
+- Tests warming, invalidation, transaction, L1, slow query
+- Bugfix Lock vers RLock
+
+---
+
+### [v4.5.51] - Janvier 2026
+
+**Sprint 2 : Tests Securite Backend**
+
+- 178 tests securite backend
+- Tests account lockout, permissions, password reset, alertes, email
+
+---
+
+### [v4.5.50] - Janvier 2026
+
+**Sprint 1 Complet : Corrections Tests**
+
+- Correction 29 fichiers tests supplementaires (lib/, hooks/, backend)
+- ScheduleManager null-safety
+
+---
+
+### [v4.5.49] - Janvier 2026
+
+**Sprint 1 : Corrections Tests + Celery Beat**
+
+- 22 fichiers corriges, 1052 tests
+- Fiabilite Celery Beat amelioree
+
+---
+
+### [v4.5.48] - Janvier 2026
+
+**Demos Connectees : Reports + Batch Enrichment**
+
+- ReportsManager/ReportBuilder (CRUD + generation multi-DB)
+- BatchEnrichmentPanel (batch reel + pause/resume)
+
+---
+
+### [v4.5.47] - Janvier 2026
+
+**Demos Connectees : AI Dashboard + KPI + Export**
+
+- AIDashboard connecte (ai_usage_logs)
+- KPICards (multi-DB)
+- ExportProductDialog (produits API + export reel)
+
+---
+
+### [v4.5.46] - Janvier 2026
+
+**AI Enrichment : Moteur Reel Connecte**
+
+- Moteur d enrichissement IA reel connecte (OpenAI/Anthropic)
+- Batch asynchrone avec suivi budgetaire
+- Module AI Enrichment separe
+
+---
+
+### [v4.5.45] - Decembre 2025
+
+**Auto-Rules : Pipeline Import**
+
+- Auto-complete HT/TTC dans pipeline import
+- Auto-conversion unites/devises
+
+---
+
+### [v4.5.44] - Decembre 2025
+
+**Computed Attributes : Mapping Templates**
+
+- Attributs calcules dans mapping templates
+- Command Palette width fix
+
+---
+
+### [v4.5.43] - Decembre 2025
+
+**Audit Mock/Demo : Cleanup Frontend**
+
+- Cleanup 15 composants frontend
+- Wizard fournisseur fixes
+- Bannieres demo
+
+---
+
+### [v4.5.42] - Decembre 2025
+
+**Price Monitor : Surveillance Prix Concurrents**
+
+- Module Price Monitor complet (SerpAPI/SearXNG)
+- Tiers de surveillance (4h/24h/7j)
+- File de validation prix
+- 15 endpoints sous /api/v1/prices
+
+---
+
+### [v4.5.41] - Decembre 2025
+
+**Cleanup Repository**
+
+- Archive fichiers obsoletes
+- Reorganisation scripts et docs
+
+---
+
+### [v4.5.40] - Decembre 2025
+
+**Search Engine : Meilisearch**
+
+- Integration Meilisearch (moteur de recherche full-text)
+- SearchBar dans le header
+- Module search_engine activable
+- Fallback PostgreSQL ILIKE
+
+---
+
+### [v4.5.39] - Decembre 2025
+
+**UX/UI : Sidebar + Command Palette + Performance**
+
+- Sidebar compacte + icons-only mode
+- Command Palette (~55 entrees)
+- Optimisation performance
+- Module completude catalogue
+
+---
+
+### [v4.5.38] - Decembre 2025
+
+**Completude Catalogue**
+
+- Scoring fixes + ASIN/cost_price
+- Frontend completude
+
+---
+
+### [v4.5.36] - Decembre 2025
+
+**MCP Servers**
+
+- 8 serveurs MCP, 42 outils pour agents IA
+- Categories (6), Icecat (5), Brands (7), AI (6), Products (5), Suppliers (5), Code2ASIN (4), Imports (4)
+
+---
+
+### [v4.5.35] - Decembre 2025
+
+**Categories Manager + PrestaShop/Security**
+
+- Categories Manager complet
+- Corrections PrestaShop et securite
+
+---
+
+### [v4.5.34] - Decembre 2025
+
+**Import System Fixes + EAN**
+
+- Corrections systeme d import
+- Gestion EAN float (defense-in-depth)
+
+---
+
+### [v4.5.33] - Decembre 2025
+
+**Brand Manager**
+
+- Harmonisation de marques, aliases, doublons, fusion
+- Interface complete de gestion des marques
+
+---
+
+
 ### [v4.5.12](/docs/releases/v4-5-0) - 30 Decembre 2025
 
 **Performance & Scalability Release**
@@ -297,11 +529,11 @@ Products Manager suit le [Semantic Versioning 2.0.0](https://semver.org/) :
 
 Fonctionnalites planifiees :
 
-- [ ] EAN Finder Module - Resolution automatique produits sans EAN
-- [ ] AI field mapping suggestions (Odoo)
-- [ ] WebSocket pour progress temps reel
+- [ ] Phase 2 Recherche : Qdrant (recherche semantique)
 - [ ] Frontend Password Reset Page
+- [ ] EAN Lookup provider integration
 - [ ] Import Export Filters UI
+- [ ] Brand Manager: Odoo brand import
 
 ### v5.0.0 - Prevue Q2 2026
 
@@ -320,7 +552,7 @@ Breaking changes et refonte majeure :
 
 | Version | Statut | Support jusqu'a | Notes |
 |---------|--------|----------------|-------|
-| **v4.5.x** | Stable | Dec 2026 | Version actuelle |
+| **v4.5.58** | Stable | Dec 2026 | Version actuelle |
 | **v4.0.0** | Stable | Dec 2026 | LTS |
 | **v3.3.0** | Obsolete | Mar 2026 | Migrer vers v4.x |
 | **v3.2.0** | Obsolete | Jan 2026 | Migrer vers v4.x |
@@ -344,7 +576,7 @@ Aucun breaking change. Migration automatique :
 
 ```bash
 git pull origin main
-git checkout v4.5.12
+git checkout v4.5.58
 cd api && alembic upgrade head
 docker-compose restart
 ```

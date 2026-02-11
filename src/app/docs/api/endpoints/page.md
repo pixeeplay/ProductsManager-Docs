@@ -6,7 +6,7 @@ nextjs:
     description: Documentation complète des endpoints REST de l'API Products Manager.
 ---
 
-L'API Products Manager expose des endpoints REST pour gérer produits, fournisseurs, imports et analytics. Tous les endpoints nécessitent une authentification JWT. {% .lead %}
+L'API Products Manager v4.5.58 expose 47+ routeurs REST pour gérer produits, fournisseurs, imports, IA, prix et analytics. La plupart des endpoints nécessitent une authentification JWT (sauf health checks et modules status). {% .lead %}
 
 ---
 
@@ -14,7 +14,7 @@ L'API Products Manager expose des endpoints REST pour gérer produits, fournisse
 
 ```text
 Production: https://api.productsmanager.app/api/v1
-Staging: https://api-staging.productsmanager.app/api/v1
+Staging: https://staging-api.productsmanager.app/api/v1
 ```
 
 ---
@@ -457,15 +457,18 @@ Champs triables courants : `name`, `price`, `stock`, `created_at`, `updated_at`
 
 ## Rate Limiting
 
-L'API applique des limites de requêtes pour garantir la stabilité :
+L'API applique des limites de requêtes par tiers pour garantir la stabilité :
 
-| Endpoint Pattern | Limite |
-|------------------|--------|
-| /auth/* | 10 requêtes/minute |
-| /imports/create | 5 requêtes/minute |
-| /products/bulk | 5 requêtes/minute |
-| /analytics/report | 10 requêtes/heure |
-| Autres endpoints | 100 requêtes/minute |
+| Tier | Limite | Exemples |
+|------|--------|----------|
+| Critical (Auth) | 5/minute | /auth/login, /auth/register |
+| Critical (Bulk) | 500/minute | /imports, /exports bulk |
+| Critical (AI) | 1/heure (batch), 20/min (single) | /enrichment |
+| High (Write) | 100/minute | POST/PUT/DELETE operations |
+| Medium (Read) | 1000/minute | GET operations |
+| Low (Public) | 1000/minute | /health, /modules/status |
+
+Voir [Rate Limiting](/docs/api/rate-limiting) pour la documentation complete.
 
 ### Headers de Rate Limit
 
@@ -482,6 +485,140 @@ Si vous dépassez la limite, vous recevrez une erreur **429 Too Many Requests**.
 {% /callout %}
 
 ---
+
+---
+
+## Modules API Complets (47+ routeurs)
+
+Products Manager v4.5.58 expose 47+ routeurs API organises par domaine fonctionnel. Voici la liste complete :
+
+### Authentification & Utilisateurs
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `auth` | `/api/v1/auth` | Login, register, refresh, logout, password reset |
+| `users` | `/api/v1/users` | Gestion utilisateurs (CRUD, profils) |
+| `admin` | `/api/v1/admin` | Panel administration |
+
+### Produits & Catalogue
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `products` | `/api/v1/products` | CRUD produits, recherche, filtres, bulk operations |
+| `brands` | `/api/v1/brands` | Gestion marques (harmonisation, aliases, doublons, fusion) |
+| `categories` | `/api/v1/categories` | Categories produits |
+| `categories_manager` | `/api/v1/categories-manager` | Gestionnaire avance de taxonomies |
+| `tags` | `/api/v1/tags` | Tags produits |
+
+### Fournisseurs
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `suppliers` | `/api/v1/suppliers` | CRUD fournisseurs |
+| `supplier_history` | `/api/v1/supplier-history` | Historique fournisseurs |
+
+### Imports & Exports
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `imports` | `/api/v1/imports` | Jobs d'import, upload, traitement |
+| `import_configs` | `/api/v1/import-configs` | Configurations d'import par fournisseur |
+| `mapping_templates` | `/api/v1/mapping-templates` | Templates de mapping reutilisables |
+| `exports` | `/api/v1/exports` | Jobs d'export |
+| `export_platforms` | `/api/v1/export-platforms` | Configuration plateformes export |
+
+### Media & Fichiers
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `media` | `/api/v1/media` | Gestion fichiers media (MinIO) |
+| `product_images` | `/api/v1/product-images` | Images produits |
+| `files` | `/api/v1/files` | File explorer |
+| `storage` | `/api/v1/storage` | Operations stockage MinIO |
+
+### Amazon & Code2ASIN
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `code2asin` | `/api/v1/code2asin` | Jobs Code2ASIN, resultats, statistiques |
+| `amazon_api` | `/api/v1/amazon` | Configuration API Amazon |
+
+### EAN & Barcode
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `ean_lookup` | `/api/v1/ean-lookup` | Recherche EAN/barcode |
+| `ean_lookup_search` | `/api/v1/ean-search` | Recherche EAN avancee |
+
+### Intelligence Artificielle
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `enrichment` | `/api/v1/enrichment` | Enrichissement IA (batch, unitaire) |
+| `ai_providers` | `/api/v1/ai-providers` | Configuration fournisseurs IA (OpenAI, Anthropic) |
+
+### Icecat
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `icecat` | `/api/v1/icecat` | Enrichissement Icecat |
+
+### Integrations ERP
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `odoo` | `/api/v1/odoo` | Synchronisation Odoo ERP |
+| `prestashop` | `/api/v1/prestashop` | Synchronisation PrestaShop |
+
+### Prix & Concurrence
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `price_monitor` | `/api/v1/prices` | Price Monitor (dashboard, monitored, competitors, validation, history) |
+| `price_tracking` | `/api/v1/price-tracking` | Suivi prix |
+
+### Analytics & Rapports
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `analytics` | `/api/v1/analytics` | Metriques et analytics |
+| `dashboard` | `/api/v1/dashboard` | Donnees dashboard |
+| `reports` | `/api/v1/reports` | Generation rapports |
+
+### Recherche
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `search` | `/api/v1/search` | Recherche Meilisearch (avec fallback PostgreSQL) |
+
+### Systeme & Configuration
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `settings` | `/api/v1/settings` | Parametres application |
+| `modules` | `/api/v1/modules` | Gestion des 17 modules (status, enable/disable, order) |
+| `notifications` | `/api/v1/notifications` | Notifications utilisateur |
+| `email_settings` | `/api/v1/email-settings` | Configuration email |
+
+### Monitoring & Performance
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `health` | `/health` | Health checks (API, DB, Redis, Celery) |
+| `monitoring` | `/api/v1/monitoring` | Metriques systeme |
+| `performance` | `/api/v1/performance` | Metriques performance |
+| `error_monitoring` | `/api/v1/errors` | Monitoring erreurs |
+| `cache` | `/api/v1/cache` | Gestion cache Redis |
+| `security_dashboard` | `/api/v1/security` | Dashboard securite |
+
+### Divers
+
+| Routeur | Prefix | Description |
+|---------|--------|-------------|
+| `business` | `/api/v1/business` | Logique metier |
+| `multidb` | `/api/v1/multidb` | Operations cross-database |
+| `product_sourcing` | `/api/v1/sourcing` | Sourcing produits |
+| `bucket_config` | `/api/v1/buckets` | Configuration buckets MinIO |
 
 ## Ressources Associées
 

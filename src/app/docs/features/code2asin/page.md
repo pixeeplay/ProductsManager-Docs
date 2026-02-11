@@ -3,23 +3,28 @@ title: Code2ASIN - Amazon Integration
 nextjs:
   metadata:
     title: Code2ASIN - Amazon Integration - Products Manager APP
-    description: Convertissez automatiquement vos codes EAN/UPC en ASIN Amazon via l'API Product Advertising. Enrichissez votre catalogue avec les donnees Amazon.
+    description: "Convertissez automatiquement vos codes EAN/UPC en ASIN Amazon via l’API Product Advertising. Enrichissez votre catalogue avec les donnees Amazon."
 ---
 
-Convertissez automatiquement vos codes EAN/UPC en identifiants Amazon ASIN. Code2ASIN interroge l'API Amazon Product Advertising pour enrichir votre catalogue avec les donnees produits Amazon : prix, images, descriptions et plus encore. {% .lead %}
+Convertissez automatiquement vos codes EAN/UPC en identifiants Amazon ASIN. Code2ASIN interroge l’API Amazon Product Advertising pour enrichir votre catalogue avec les donnees produits Amazon : prix, images, descriptions et plus encore. {% .lead %}
 
 ---
 
-## Vue d'Ensemble
+## Vue d’Ensemble
 
 Code2ASIN est le module de mapping EAN vers ASIN de Products Manager APP. Il permet de :
 
-- **Convertir des codes EAN/UPC en ASIN** via l'API Amazon Product Advertising
+- **Convertir des codes EAN/UPC en ASIN** via l’API Amazon Product Advertising
 - **Enrichir votre catalogue** avec les donnees Amazon (prix, images, descriptions)
-- **Telecharger les images Amazon** vers votre stockage MinIO
+- **Telecharger les images Amazon** vers votre stockage MinIO (systeme media integre depuis v4.5.7)
 - **Traiter des milliers de produits** en mode batch avec suivi en temps reel
+- **Exporter les resultats en CSV** pour analyse ou import dans d’autres systemes
 
 Le module utilise une architecture asynchrone basee sur Celery pour traiter les conversions en arriere-plan, garantissant des performances optimales meme pour les grands catalogues.
+
+{% callout type="info" title="Architecture Multi-DB" %}
+Code2ASIN utilise sa propre base de donnees dediee (`db_code2asin`) dans l’architecture multi-DB a 7 bases de Products Manager. Les images telechargees sont stockees via le systeme media (`db_media` + MinIO).
+{% /callout %}
 
 ---
 
@@ -36,23 +41,24 @@ services/code2asin/
 ├── processing_service.py        # Orchestration des jobs
 ├── result_service.py            # Stockage et export des resultats
 ├── job_lifecycle_service.py     # CRUD des jobs
-└── job_execution_service.py     # Gestion de l'execution
+└── job_execution_service.py     # Gestion de l’execution
 ```
 
 ### Flux de Traitement
 
-1. **Upload du fichier** : L'utilisateur uploade un fichier CSV/Excel contenant les codes EAN
+1. **Upload du fichier** : L’utilisateur uploade un fichier CSV/Excel contenant les codes EAN
 2. **Creation du job** : Un job est cree dans la base `db_code2asin`
 3. **Dispatch Celery** : Le job est envoye a la queue `code2asin`
 4. **Traitement batch** : Les codes sont convertis par lots de 100
 5. **Stockage resultats** : Les ASIN et donnees Amazon sont sauvegardes
-6. **Export fichier** : Un fichier Excel de resultats est genere
+6. **Images Media** : Les images Amazon sont telechargees dans MinIO via le systeme media (`db_media`)
+7. **Export CSV** : Un fichier CSV/Excel de resultats est genere pour telechargement
 
 ---
 
 ## Gestion des Jobs
 
-### Cycle de Vie d'un Job
+### Cycle de Vie d’un Job
 
 Un job Code2ASIN passe par plusieurs statuts :
 
@@ -60,10 +66,10 @@ Un job Code2ASIN passe par plusieurs statuts :
 |--------|-------------|
 | `pending` | Job cree, en attente de traitement |
 | `processing` | Conversion en cours |
-| `paused` | Job mis en pause par l'utilisateur |
+| `paused` | Job mis en pause par l’utilisateur |
 | `completed` | Traitement termine avec succes |
 | `failed` | Erreur lors du traitement |
-| `cancelled` | Annule par l'utilisateur |
+| `cancelled` | Annule par l’utilisateur |
 
 ### Actions Disponibles
 
@@ -75,7 +81,7 @@ Un job Code2ASIN passe par plusieurs statuts :
 - **Delete** : Supprimer un job (sauf en cours de traitement)
 
 {% callout type="note" %}
-Seuls les jobs en statut `failed` ou `cancelled` peuvent etre relances. Utilisez l'option `reset_retry_counter=true` pour reinitialiser le compteur de tentatives.
+Seuls les jobs en statut `failed` ou `cancelled` peuvent etre relances. Utilisez l’option `reset_retry_counter=true` pour reinitialiser le compteur de tentatives.
 {% /callout %}
 
 ---
@@ -97,7 +103,7 @@ La page de details (`/code2asin/[id]/details`) affiche des informations complete
 | **Partial Matches** | Correspondances partielles |
 | **Avg Confidence** | Score de confiance moyen (0-100%) |
 
-### Timeline d'Execution
+### Timeline d’Execution
 
 La timeline affiche les evenements du job :
 
@@ -105,7 +111,7 @@ La timeline affiche les evenements du job :
 - Demarrage du traitement
 - Progression (codes traites)
 - Completion ou erreur
-- Temps d'execution total
+- Temps d’execution total
 
 ### Onglets de Navigation
 
@@ -115,13 +121,13 @@ La timeline affiche les evenements du job :
 
 ---
 
-## Telechargement d'Images Amazon
+## Telechargement d’Images Amazon
 
-Code2ASIN peut telecharger automatiquement les images Amazon vers votre stockage MinIO.
+Code2ASIN peut telecharger automatiquement les images Amazon vers votre stockage MinIO, en utilisant le systeme media integre de Products Manager (db_media).
 
 ### Configuration
 
-Dans les options d'import :
+Dans les options d’import :
 
 ```json
 {
@@ -131,7 +137,7 @@ Dans les options d'import :
 }
 ```
 
-### Modes d'Image
+### Modes d’Image
 
 | Mode | Description |
 |------|-------------|
@@ -141,17 +147,29 @@ Dans les options d'import :
 
 ### Stockage
 
-Les images sont stockees dans MinIO avec la structure :
+Les images sont stockees dans MinIO avec la structure UUID prefix sharding :
 
 ```
 products/{uuid[0:2]}/{product_id}/{hash}.jpg
 ```
 
-Cette structure UUID prefix permet une distribution uniforme et supporte des catalogues de plus de 200 000 produits.
+Cette structure UUID prefix permet une distribution uniforme et supporte des catalogues de plus de 200 000 produits. Les metadonnees sont enregistrees dans `db_media` (table `media_files`).
 
 ---
 
-## Logs et Suivi d'Execution
+## Export CSV des Resultats
+
+Depuis la v4.5.7, les resultats d’un job Code2ASIN peuvent etre exportes en CSV :
+
+- **Export complet** : Tous les resultats du job
+- **Export filtre** : Par type de match (exact, fuzzy, partial)
+- **Colonnes incluses** : EAN, ASIN, titre Amazon, prix, confidence, type de match, URL images
+
+L’export est accessible via le bouton "Exporter CSV" sur la page de details du job.
+
+---
+
+## Logs et Suivi d’Execution
 
 ### Structure des Logs
 
@@ -160,7 +178,7 @@ Chaque conversion genere un log detaille :
 ```json
 {
   "id": 1,
-  "timestamp": "2025-10-21T16:01:23Z",
+  "timestamp": "2026-01-21T16:01:23Z",
   "input_code": "3760123456789",
   "code_type": "EAN",
   "previous_asin": null,
@@ -190,7 +208,7 @@ Chaque conversion genere un log detaille :
 | Methode | Endpoint | Description |
 |---------|----------|-------------|
 | `GET` | `/code2asin/jobs` | Liste paginee des jobs |
-| `GET` | `/code2asin/jobs/{id}` | Details d'un job |
+| `GET` | `/code2asin/jobs/{id}` | Details d’un job |
 | `POST` | `/code2asin/import` | Creer un nouveau job |
 | `POST` | `/code2asin/jobs/{id}/start` | Demarrer un job |
 | `POST` | `/code2asin/jobs/{id}/pause` | Mettre en pause |
@@ -201,7 +219,7 @@ Chaque conversion genere un log detaille :
 | `GET` | `/code2asin/results/{id}` | Resultats de conversion |
 | `GET` | `/code2asin/jobs/{id}/logs` | Logs du job |
 | `GET` | `/code2asin/statistics` | Statistiques globales |
-| `GET` | `/code2asin/stats/errors` | Statistiques d'erreurs |
+| `GET` | `/code2asin/stats/errors` | Statistiques d’erreurs |
 
 ### Permissions Requises
 
@@ -213,9 +231,9 @@ Chaque conversion genere un log detaille :
 
 ---
 
-## Exemples d'Utilisation de l'API
+## Exemples d’Utilisation de l’API
 
-### Creer un Job d'Import
+### Creer un Job d’Import
 
 ```bash
 curl -X POST "https://api.productsmanager.app/code2asin/import" \
@@ -223,7 +241,7 @@ curl -X POST "https://api.productsmanager.app/code2asin/import" \
   -F "supplier_code=SUP001" \
   -F "file=@ean_codes.xlsx" \
   -F "use_amazon_api=true" \
-  -F 'options={"download_images": true, "max_images_per_product": 5}'
+  -F ’options={"download_images": true, "max_images_per_product": 5}’
 ```
 
 **Reponse :**
@@ -256,8 +274,8 @@ curl -X GET "https://api.productsmanager.app/code2asin/jobs?page=1&per_page=20&s
       "total_codes": 1000,
       "successful_conversions": 850,
       "failed_conversions": 150,
-      "created_at": "2025-10-21T16:00:00Z",
-      "completed_at": "2025-10-21T16:05:00Z"
+      "created_at": "2026-01-21T16:00:00Z",
+      "completed_at": "2026-01-21T16:05:00Z"
     }
   ],
   "total": 45,
@@ -266,7 +284,7 @@ curl -X GET "https://api.productsmanager.app/code2asin/jobs?page=1&per_page=20&s
 }
 ```
 
-### Recuperer les Resultats d'un Job
+### Recuperer les Resultats d’un Job
 
 ```bash
 curl -X GET "https://api.productsmanager.app/code2asin/results/550e8400-e29b-41d4-a716-446655440000?match_type=exact&limit=10" \
@@ -322,7 +340,7 @@ curl -X POST "https://api.productsmanager.app/code2asin/jobs/550e8400-e29b-41d4-
 }
 ```
 
-### Recuperer les Statistiques d'Erreurs
+### Recuperer les Statistiques d’Erreurs
 
 ```bash
 curl -X GET "https://api.productsmanager.app/code2asin/stats/errors?days=7" \
@@ -349,7 +367,7 @@ curl -X GET "https://api.productsmanager.app/code2asin/stats/errors?days=7" \
     "invalid_data": {
       "count": 20,
       "percentage": 40.0,
-      "description": "Invalid ASIN/product data (permanent, don't retry)"
+      "description": "Invalid ASIN/product data (permanent, don’t retry)"
     },
     "unknown": {
       "count": 5,
@@ -369,7 +387,7 @@ curl -X GET "https://api.productsmanager.app/code2asin/stats/errors?days=7" \
 
 Le mode Import Direct attend un fichier a 2 colonnes (EAN, ASIN) :
 
-- Pas d'appel API Amazon
+- Pas d’appel API Amazon
 - Import direct des mappings fournis
 - Ideal pour importer des mappings existants
 
@@ -386,21 +404,21 @@ Le mode API Amazon recherche les ASIN a partir des codes EAN :
 
 - Appel Amazon Product Advertising API
 - Enrichissement avec donnees Amazon
-- Telechargement optionnel des images
+- Telechargement optionnel des images (stockees dans db_media + MinIO)
 
 ```bash
 curl -X POST "https://api.productsmanager.app/code2asin/import" \
   -F "supplier_code=SUP001" \
   -F "file=@ean_codes.csv" \
   -F "use_amazon_api=true" \
-  -F 'options={"download_images": true}'
+  -F ’options={"download_images": true}’
 ```
 
 ---
 
 ## Gestion des Erreurs
 
-### Types d'Erreurs
+### Types d’Erreurs
 
 | Type | Description | Action |
 |------|-------------|--------|
@@ -425,7 +443,7 @@ Les erreurs de type `invalid_data` ne sont pas relancees automatiquement car ell
 
 ---
 
-## Cas d'Usage
+## Cas d’Usage
 
 ### Enrichissement Catalogue E-commerce
 
@@ -433,13 +451,13 @@ Les erreurs de type `invalid_data` ne sont pas relancees automatiquement car ell
 
 **Solution** :
 1. Export des EAN depuis le catalogue
-2. Creation d'un job Code2ASIN avec `use_amazon_api=true`
-3. Activation du telechargement d'images
+2. Creation d’un job Code2ASIN avec `use_amazon_api=true`
+3. Activation du telechargement d’images (stockees dans le systeme media)
 4. Import des resultats dans le catalogue
 
 **Resultat** :
 - 4200 ASIN trouves (84%)
-- 3800 images telechargees
+- 3800 images telechargees dans MinIO
 - Prix Amazon pour analyse competitive
 - Enrichissement descriptions produits
 
@@ -465,4 +483,4 @@ Les erreurs de type `invalid_data` ne sont pas relancees automatiquement car ell
 - [EAN Manager](/docs/features/ean-manager) : Recherche EAN pour produits sans code-barres
 - [Import Centralisation](/docs/features/import-centralisation) : Importez vos catalogues fournisseurs
 - [Market Intelligence](/docs/features/market-intelligence) : Analysez les tendances marche
-- [API Reference](/docs/api/endpoints) : Documentation complete de l'API
+- [API Reference](/docs/api/endpoints) : Documentation complete de l’API

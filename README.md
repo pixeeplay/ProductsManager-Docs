@@ -37,41 +37,25 @@ Ce site de documentation fournit des guides complets, des references API et des 
 - **Mode Sombre**: Theme clair/sombre avec next-themes
 - **Security Headers**: 10 headers de securite configures
 
-## Structure de la Documentation
+## Structure de la Documentation (61 pages)
 
 ```
-/docs/getting-started/
-  ├─ introduction       # Qu'est-ce que Products Manager APP
-  ├─ quick-start        # Guide de demarrage en 10 minutes
-  └─ installation       # Instructions d'installation completes
-
-/docs/features/
-  ├─ import-centralisation  # Imports fournisseurs automatises
-  ├─ ai-enrichment          # Generation de contenu par IA
-  ├─ ean-manager            # Gestion des codes-barres & recherche ASIN
-  └─ market-intelligence    # Suivi des prix & analytics
-
-/docs/guides/
-  ├─ getting-started        # Guide de demarrage
-  ├─ import-workflow        # Workflow d'import
-  └─ dashboard-usage        # Utilisation du tableau de bord
-
-/docs/api/
-  ├─ authentication     # Authentification JWT
-  ├─ endpoints          # Reference API REST
-  └─ webhooks           # Notifications d'evenements
-
-/docs/integrations/
-  ├─ odoo              # Integration ERP Odoo
-  ├─ shopify           # Synchronisation Shopify
-  ├─ prestashop        # Connecteur PrestaShop
-  └─ woocommerce       # Integration WooCommerce
-
-/docs/technical/
-  ├─ architecture      # Architecture technique
-  ├─ database          # Schema de base de donnees
-  ├─ deployment        # Guide de deploiement
-  └─ security          # Securite et conformite
+/docs/getting-started/     # 3 pages  - Introduction, Quick Start, Installation
+/docs/features/            # 7 pages  - Import, AI, EAN, Market Intel, Odoo, Code2ASIN, Thumbnails
+/docs/modules/             # 11 pages - Systeme de modules, Fournisseurs, Imports, Exports,
+                           #            AI Enrichment, Price Monitor, Brand Manager,
+                           #            Categories Manager, Search Engine, Completude, File Explorer
+/docs/user-guides/         # 5 pages  - Getting Started, Products, Imports, Exports, Dashboard
+/docs/api/                 # 8 pages  - Overview, Auth, Rate Limiting, Permissions, Endpoints,
+                           #            Webhooks, Errors, Examples
+/docs/technical/           # 7 pages  - Architecture, Database, Performance, Caching,
+                           #            Media Storage, Deployment, Security
+/docs/mcp/                 # 3 pages  - MCP Overview, Servers (42 outils), AI Providers
+/docs/data-model/          # 1 page   - Product Model (100+ champs)
+/docs/integrations/        # 7 pages  - Odoo, Amazon PA-API, MinIO, Shopify, PrestaShop,
+                           #            WooCommerce, Email Imports
+/docs/support/             # 2 pages  - FAQ, Troubleshooting
+/docs/releases/            # 5 pages  - Changelog, v4.5.0, v3.3.0, v3.2.0, Migration Guides
 ```
 
 ## Demarrage Rapide
@@ -235,10 +219,11 @@ Voir les fichiers suivants pour plus de details:
 - [`ROADMAP.md`](ROADMAP.md) - Plan d'action et roadmap
 - [`audits/`](audits/) - Rapports d'audit de securite
 
-### Etat Actuel (6 Decembre 2025)
+### Etat Actuel (11 Fevrier 2026)
 
 | Categorie | Score | Status |
 |-----------|-------|--------|
+| Pages documentation | 61 | 0 pages 404, couverture complete |
 | Securite NPM | 10/10 | 0 vulnerabilites |
 | Security Headers | 9/10 | 10 headers configures |
 | TypeScript | 10/10 | Strict mode + checks |
@@ -248,12 +233,14 @@ Voir les fichiers suivants pour plus de details:
 
 **Score Global: 9.7/10 (A+)**
 
-### Corrections Recentes
+### Mise a jour majeure (Fevrier 2026)
 
-| Commit | Description |
-|--------|-------------|
-| `97f808e` | React Hooks fixes, aria-labels, SEO metadata, TypeScript strict |
-| `89cd782` | README en francais avec badges tech |
+- Logo SVG remplace (ancien PNG 38KB)
+- 25 nouvelles pages creees (modules, MCP, data model, API, integrations)
+- 11 pages existantes mises a jour pour v4.5.58
+- Correction des liens FAQ/Support (faq-support → support)
+- Navigation enrichie : 11 sections, 60 liens
+- Build Next.js 16 : 0 erreur, 0 warning
 
 ## Contribuer
 

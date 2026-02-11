@@ -3,46 +3,51 @@ title: Enrichissement par IA
 nextjs:
   metadata:
     title: Enrichissement par IA - Products Manager APP
-    description: Générez automatiquement des descriptions produits optimisées SEO avec GPT-4o, GPT-4-turbo et Claude 3.5 Sonnet.
+    description: "Générez automatiquement des descriptions produits optimisées SEO avec GPT-4o, GPT-4-turbo, Claude 4.5 Sonnet et Claude 3.5 Sonnet."
 ---
 
-Transformez vos fiches produits basiques en contenus marketing percutants grâce à l'intelligence artificielle. Descriptions SEO, titres optimisés, extraction d'attributs et traduction multi-langues en quelques clics. {% .lead %}
+Transformez vos fiches produits basiques en contenus marketing percutants grâce à l’intelligence artificielle. Descriptions SEO, titres optimisés, extraction d’attributs et traduction multi-langues en quelques clics. {% .lead %}
 
 ---
 
-## Vue d'Ensemble
+## Vue d’Ensemble
 
-L'enrichissement par IA est la fonctionnalité phare de Products Manager APP. Elle vous permet de générer automatiquement du contenu marketing de qualité professionnelle sans rédacteur.
+L’enrichissement par IA est la fonctionnalité phare de Products Manager APP. Elle vous permet de générer automatiquement du contenu marketing de qualité professionnelle sans rédacteur.
 
-En exploitant les modèles d'IA les plus avancés (GPT-4o, GPT-4-turbo, Claude 3.5 Sonnet), notre système transforme vos données produits brutes en fiches produits optimisées pour la conversion et le référencement.
+En exploitant les modèles d’IA les plus avancés (GPT-4o, GPT-4-turbo, Claude 4.5 Sonnet, Claude 3.5 Sonnet), notre système transforme vos données produits brutes en fiches produits optimisées pour la conversion et le référencement.
 
-Que vous ayez 100 ou 10 000 produits, l'IA génère en quelques minutes ce qui prendrait des semaines de travail manuel.
+Que vous ayez 100 ou 10 000 produits, l’IA génère en quelques minutes ce qui prendrait des semaines de travail manuel.
+
+{% callout type="success" title="Moteur réel connecté depuis v4.5.46" %}
+Depuis la version 4.5.46, le moteur d’enrichissement IA est entièrement connecté aux fournisseurs OpenAI et Anthropic. Le traitement batch asynchrone avec pause/resume est disponible depuis v4.5.48, avec suivi budgétaire intégré.
+{% /callout %}
 
 ---
 
 ## Fonctionnalités Principales
 
-### Modèles d'IA Supportés
+### Modèles d’IA Supportés
 
 Products Manager APP intègre les meilleurs modèles du marché :
 
-- **GPT-4o** : Le plus rapide et performant d'OpenAI (recommandé pour la production)
+- **GPT-4o** : Le plus rapide et performant d’OpenAI (recommandé pour la production)
 - **GPT-4-turbo** : Excellent équilibre performance/coût
+- **Claude 4.5 Sonnet** : Dernière génération Anthropic, excellent pour contenus longs et analyses complexes
 - **Claude 3.5 Sonnet** : Particulièrement efficace pour les contenus longs et nuancés
 
-Vous pouvez basculer entre modèles selon vos besoins et comparer les résultats.
+Vous pouvez basculer entre modèles selon vos besoins et comparer les résultats. La configuration des fournisseurs IA se fait via la page `/ai-providers`.
 
 ### Génération de Descriptions Marketing
 
-L'IA crée des descriptions produits engageantes et persuasives :
+L’IA crée des descriptions produits engageantes et persuasives :
 
 - **Ton personnalisable** : Professionnel, décontracté, luxe, technique
 - **Longueur ajustable** : Courts (50 mots), moyens (150 mots), longs (300+ mots)
-- **Mise en valeur USP** : L'IA identifie et met en avant les points forts
-- **Call-to-action** : Phrases d'incitation à l'achat naturellement intégrées
+- **Mise en valeur USP** : L’IA identifie et met en avant les points forts
+- **Call-to-action** : Phrases d’incitation à l’achat naturellement intégrées
 
 {% callout type="note" %}
-Les descriptions générées sont uniques pour chaque produit. L'IA évite le duplicate content en reformulant intelligemment même pour des produits similaires.
+Les descriptions générées sont uniques pour chaque produit. L’IA évite le duplicate content en reformulant intelligemment même pour des produits similaires.
 {% /callout %}
 
 ### Titres Optimisés SEO
@@ -51,12 +56,12 @@ Générez des titres produits optimisés pour Google :
 
 - **Mots-clés stratégiques** : Intégration naturelle des termes recherchés
 - **Longueur optimale** : 50-60 caractères pour un affichage parfait dans les SERPs
-- **Hiérarchie d'information** : Marque, modèle, attributs clés dans l'ordre optimal
+- **Hiérarchie d’information** : Marque, modèle, attributs clés dans l’ordre optimal
 - **A/B testing** : Générez 3 variantes et choisissez la meilleure
 
-### Extraction Automatique d'Attributs
+### Extraction Automatique d’Attributs
 
-L'IA analyse vos descriptions existantes et extrait :
+L’IA analyse vos descriptions existantes et extrait :
 
 - **Couleur** : Détection précise incluant nuances (bleu marine, rouge cardinal, etc.)
 - **Taille** : Normalisation des formats (S/M/L, 38/40/42, dimensions cm)
@@ -70,12 +75,33 @@ Ces attributs sont ensuite utilisables pour :
 
 ### Traduction Multi-Langues
 
-Déployez vos produits à l'international en un clic :
+Déployez vos produits à l’international en un clic :
 
 - **30+ langues supportées** : Anglais, Espagnol, Allemand, Italien, Néerlandais, etc.
 - **Contexte culturel** : Adaptation des expressions idiomatiques
 - **Cohérence terminologique** : Glossaire personnalisé pour vos termes techniques
 - **Qualité professionnelle** : Niveau équivalent traducteur humain
+
+---
+
+## Traitement Batch avec Pause/Resume
+
+Depuis la v4.5.48, le système d’enrichissement batch offre :
+
+- **Traitement asynchrone** : Les produits sont traités en arrière-plan via Celery
+- **Pause/Resume** : Mettez en pause un enrichissement en cours et reprenez-le plus tard
+- **Suivi en temps réel** : Barre de progression avec statistiques détaillées
+- **Gestion d’erreurs** : Les produits en erreur sont isolés et peuvent être relances
+- **Budget tracking** : Suivi de la consommation de tokens et coûts par provider
+
+### Suivi Budgétaire
+
+Le module IA intègre un suivi budgétaire complet :
+
+- **Consommation par provider** : Suivi OpenAI et Anthropic séparément
+- **Historique d’utilisation** : Logs dans `ai_usage_logs` (db_analytics)
+- **Alertes de dépassement** : Notifications quand le budget approche la limite
+- **Tableau de bord IA** : Dashboard dédié accessible via `/ai-services`
 
 ---
 
@@ -88,10 +114,10 @@ Choisissez les produits à enrichir :
 - Filtres avancés (catégorie, fournisseur, produits sans description)
 - Import via recherche EAN
 
-### Étape 2 : Configuration de l'Enrichissement
+### Étape 2 : Configuration de l’Enrichissement
 
 Définissez vos paramètres :
-- Modèle d'IA (GPT-4o, GPT-4-turbo, Claude 3.5)
+- Modèle d’IA (GPT-4o, GPT-4-turbo, Claude 4.5 Sonnet, Claude 3.5 Sonnet)
 - Type de contenu (description, titre, attributs, traduction)
 - Ton et style souhaités
 - Longueur du texte
@@ -99,9 +125,10 @@ Définissez vos paramètres :
 ### Étape 3 : Génération
 
 Lancez le traitement :
-- L'IA traite vos produits par batch de 50
-- Temps moyen : 1-2 minutes pour 50 produits
+- L’IA traite vos produits par batch
+- Traitement asynchrone avec pause/resume
 - Barre de progression en temps réel
+- Suivi budgétaire en direct
 
 ### Étape 4 : Révision et Validation
 
@@ -128,13 +155,14 @@ Les performances varient selon le modèle :
 
 - **GPT-4o** : ~50 produits en 1 minute (le plus rapide)
 - **GPT-4-turbo** : ~50 produits en 1,5 minute
+- **Claude 4.5 Sonnet** : ~50 produits en 1,5 minute
 - **Claude 3.5 Sonnet** : ~50 produits en 2 minutes
 
 Pour 1000 produits : comptez 20-40 minutes de traitement complet.
 
 ### Consommation de Crédits
 
-L'enrichissement IA consomme des crédits selon le modèle et type :
+L’enrichissement IA consomme des crédits selon le modèle et type :
 
 - **Description courte** : 1 crédit/produit
 - **Description longue** : 2 crédits/produit
@@ -148,7 +176,7 @@ Tous les plans incluent des crédits IA mensuels. Plan Starter : 500 crédits/mo
 
 ---
 
-## Cas d'Usage
+## Cas d’Usage
 
 ### Boutique Mode avec 5000 Références
 
@@ -202,6 +230,7 @@ Tous les plans incluent des crédits IA mensuels. Plan Starter : 500 crédits/mo
 - Un compte Products Manager APP avec crédits IA disponibles
 - Des produits importés dans votre catalogue
 - Données minimales : titre ou référence produit
+- Au moins un fournisseur IA configuré (via `/ai-providers`)
 
 ### Configuration Basique
 
@@ -210,7 +239,7 @@ Tous les plans incluent des crédits IA mensuels. Plan Starter : 500 crédits/mo
 3. Cliquez sur **Actions > Enrichir avec IA**
 4. Choisissez :
    - Type : Description / Titre / Attributs / Traduction
-   - Modèle : GPT-4o (recommandé)
+   - Modèle : GPT-4o (recommandé) ou Claude 4.5 Sonnet
    - Ton : Selon votre marque
 5. Lancez la génération
 
@@ -235,7 +264,7 @@ Définissez des contraintes automatiques :
 
 #### Workflows Automatisés
 
-Automatisez l'enrichissement :
+Automatisez l’enrichissement :
 - Trigger : Nouveau produit importé
 - Action : Enrichissement IA automatique
 - Validation : Manuelle ou auto selon score qualité
@@ -251,4 +280,4 @@ Les workflows automatisés sont disponibles à partir du plan Growth. Contactez-
 - [Centralisation des Imports](/docs/features/import-centralisation) : Importez vos produits avant enrichissement
 - [Market Intelligence](/docs/features/market-intelligence) : Optimisez vos prix après enrichissement
 - [Intégrations](/docs/integrations) : Synchronisez vos contenus enrichis vers vos canaux
-- [API Reference](/docs/api) : Automatisez l'enrichissement via API
+- [API Reference](/docs/api) : Automatisez l’enrichissement via API

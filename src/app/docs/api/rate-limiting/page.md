@@ -3,112 +3,138 @@ title: Rate Limiting
 nextjs:
   metadata:
     title: Rate Limiting - Products Manager API
-    description: Complete guide to API rate limiting, tiers, headers, and error handling for Products Manager.
+    description: "Guide complet du rate limiting de l'API Products Manager : tiers, headers, gestion des erreurs."
 ---
 
-The Products Manager API implements granular rate limiting to protect against abuse and ensure fair usage across all users. {% .lead %}
-
----
-
-## Overview
-
-Rate limiting controls how many API requests you can make within a specific time window. This protects the API from abuse, ensures fair resource allocation, and maintains system stability for all users.
-
-Key features:
-
-- **Tiered limits**: Different endpoints have different limits based on resource intensity
-- **Per-user tracking**: Limits are tracked per authenticated user
-- **Clear headers**: Every response includes rate limit information
-- **Graceful handling**: 429 responses include retry timing information
+L'API Products Manager implemente un rate limiting granulaire pour proteger contre les abus et garantir une utilisation equitable pour tous les utilisateurs. {% .lead %}
 
 ---
 
-## Rate Limit Tiers
+## Vue d'ensemble
 
-The API organizes rate limits into four tiers based on risk level and resource intensity:
+Le rate limiting controle le nombre de requetes API autorisees dans une fenetre de temps donnee. Cela protege l'API contre les abus, garantit une allocation equitable des ressources, et maintient la stabilite du systeme.
 
-### Critical Tier
+Caracteristiques principales :
 
-Operations that require the most restrictive limits due to security concerns or high resource cost.
-
-| Tier | Limit | Description |
-|------|-------|-------------|
-| AUTH_LOGIN | 5/minute | Login attempts (brute force protection) |
-| AUTH_PASSWORD_RESET | 5/minute | Password reset requests |
-| AUTH_REGISTER | 5/minute | New account creation |
-| AUTH_REFRESH | 30/minute | Token refresh operations |
-| AUTH_LOGOUT | 30/minute | Logout operations |
-| BULK_IMPORT | 500/minute | Bulk data imports |
-| BULK_EXPORT | 500/minute | Bulk data exports |
-| BULK_CREATE | 500/minute | Bulk entity creation |
-| BULK_UPDATE | 500/minute | Bulk entity updates |
-| BULK_DELETE | 500/minute | Bulk entity deletion |
-| AI_BATCH | 1/hour | AI batch enrichment (cost control) |
-| AI_SINGLE | 20/minute | AI single product enrichment |
-
-### High Tier
-
-Write operations and data export functions.
-
-| Tier | Limit | Description |
-|------|-------|-------------|
-| WRITE_STANDARD | 100/minute | Standard POST/PUT/DELETE operations |
-| WRITE_UPLOAD | 100/minute | File uploads |
-| WRITE_USER_MGMT | 100/minute | User and role management |
-| WRITE_CONFIG | 100/minute | Configuration changes |
-| EXPORT_STANDARD | 50/minute | CSV/Excel/JSON exports |
-| EXPORT_STREAM | 50/minute | Streaming exports |
-| EXPORT_DOWNLOAD | 50/minute | File downloads |
-| EXPORT_SCHEDULE | 50/minute | Scheduled export operations |
-
-### Medium Tier
-
-Standard read operations with moderate limits.
-
-| Tier | Limit | Description |
-|------|-------|-------------|
-| READ_SENSITIVE | 50/minute | User data, audit logs |
-| READ_STANDARD | 1000/minute | Standard GET operations |
-| READ_ADMIN | 1000/minute | Admin panel read operations |
-
-### Low Tier
-
-Public and health check endpoints with permissive limits.
-
-| Tier | Limit | Description |
-|------|-------|-------------|
-| READ_PUBLIC | 1000/minute | Public data (categories, etc.) |
-| HEALTH_CHECK | 1000/minute | Health and status endpoints |
-| PROGRESS_POLL | 1000/minute | Progress polling (high frequency) |
+- **Limites par tiers** : Differents endpoints ont differentes limites selon l'intensite des ressources
+- **Suivi par utilisateur** : Les limites sont trackees par utilisateur authentifie
+- **Headers clairs** : Chaque reponse inclut les informations de rate limit
+- **Gestion gracieuse** : Les reponses 429 incluent le temps de retry
+- **Ajustement par environnement** : Limites adaptees (dev, staging, production)
+- **Logging des violations** : Enregistrement dans `rate_limit_violations` (db_analytics)
 
 ---
 
-## Summary by Endpoint Category
+## Tiers de Rate Limiting
 
-| Category | Limit | Examples |
-|----------|-------|----------|
-| Read Endpoints | 1000/minute | Product listings, search, details |
-| Write Endpoints | 100/minute | Create, update, delete operations |
-| Analytics & Reports | 50/minute | Dashboard metrics, exports |
-| AI Operations | 20/minute | Single enrichment, categorization |
-| AI Batch | 1/hour | Bulk AI processing |
-| Bulk Operations | 500/minute | Large catalog imports/exports |
-| Authentication | 5/minute | Login, register, password reset |
+L'API organise les rate limits en quatre tiers selon le niveau de risque et l'intensite des ressources :
+
+### Tier Critical
+
+Operations necessitant les limites les plus restrictives pour raisons de securite ou cout eleve.
+
+| Tier | Limite | Description |
+|------|--------|-------------|
+| AUTH_LOGIN | 5/minute | Tentatives de connexion (protection brute force) |
+| AUTH_PASSWORD_RESET | 5/minute | Demandes de reset mot de passe |
+| AUTH_REGISTER | 5/minute | Creation de compte |
+| AUTH_REFRESH | 30/minute | Rafraichissement de token |
+| AUTH_LOGOUT | 30/minute | Operations de deconnexion |
+| BULK_IMPORT | 500/minute | Imports de donnees en masse |
+| BULK_EXPORT | 500/minute | Exports de donnees en masse |
+| BULK_CREATE | 500/minute | Creation d'entites en masse |
+| BULK_UPDATE | 500/minute | Mise a jour d'entites en masse |
+| BULK_DELETE | 500/minute | Suppression d'entites en masse |
+| AI_BATCH | 1/heure | Enrichissement IA batch (controle de cout) |
+| AI_SINGLE | 20/minute | Enrichissement IA produit unique |
+
+### Tier High
+
+Operations d'ecriture et fonctions d'export.
+
+| Tier | Limite | Description |
+|------|--------|-------------|
+| WRITE_STANDARD | 100/minute | Operations POST/PUT/DELETE standard |
+| WRITE_UPLOAD | 100/minute | Upload de fichiers |
+| WRITE_USER_MGMT | 100/minute | Gestion utilisateurs et roles |
+| WRITE_CONFIG | 100/minute | Changements de configuration |
+| EXPORT_STANDARD | 50/minute | Exports CSV/Excel/JSON |
+| EXPORT_STREAM | 50/minute | Exports en streaming |
+| EXPORT_DOWNLOAD | 50/minute | Telechargement de fichiers |
+| EXPORT_SCHEDULE | 50/minute | Operations d'export planifiees |
+
+### Tier Medium
+
+Operations de lecture standard avec limites moderees.
+
+| Tier | Limite | Description |
+|------|--------|-------------|
+| READ_SENSITIVE | 50/minute | Donnees utilisateur, logs d'audit |
+| READ_STANDARD | 1000/minute | Operations GET standard |
+| READ_ADMIN | 1000/minute | Lectures panel admin |
+
+### Tier Low
+
+Endpoints publics et health checks avec limites permissives.
+
+| Tier | Limite | Description |
+|------|--------|-------------|
+| READ_PUBLIC | 1000/minute | Donnees publiques (categories, etc.) |
+| HEALTH_CHECK | 1000/minute | Endpoints health et status |
+| PROGRESS_POLL | 1000/minute | Polling de progression (haute frequence) |
 
 ---
 
-## Response Headers
+## Resume par Categorie d'Endpoint
 
-All API responses include rate limit information in the following headers:
+| Categorie | Limite | Exemples |
+|-----------|--------|----------|
+| Lecture | 1000/minute | Listes produits, recherche, details |
+| Ecriture | 100/minute | Creation, mise a jour, suppression |
+| Analytics & Rapports | 50/minute | Metriques dashboard, exports |
+| Operations IA | 20/minute | Enrichissement unitaire, categorisation |
+| IA Batch | 1/heure | Traitement IA en masse |
+| Operations en masse | 500/minute | Imports/exports catalogue |
+| Authentification | 5/minute | Login, register, password reset |
+
+---
+
+## Implementation
+
+Le rate limiting utilise SlowAPI avec Redis comme backend :
+
+```python
+from slowapi import Limiter
+from api.core.rate_limits import get_rate_limit, RateLimitTier
+
+limiter = Limiter(key_func=get_remote_address, storage_uri=REDIS_URL)
+
+@router.post("/auth/login")
+@limiter.limit(get_rate_limit(RateLimitTier.AUTH_LOGIN))
+async def login(request: Request, credentials: LoginRequest):
+    ...
+
+@router.get("/products")
+@require_permission(Permission.READ_PRODUCTS)
+@limiter.limit(get_rate_limit(RateLimitTier.READ_STANDARD))
+async def list_products(request: Request):
+    ...
+```
+
+---
+
+## Headers de Reponse
+
+Toutes les reponses API incluent les informations de rate limit dans les headers suivants :
 
 | Header | Description |
 |--------|-------------|
-| `X-RateLimit-Limit` | Maximum number of requests allowed in the current time window |
-| `X-RateLimit-Remaining` | Number of requests remaining in the current time window |
-| `X-RateLimit-Reset` | Unix timestamp (seconds) when the rate limit window resets |
-| `Retry-After` | Seconds to wait before retrying (only present on 429 responses) |
+| `X-RateLimit-Limit` | Nombre maximum de requetes autorisees dans la fenetre de temps |
+| `X-RateLimit-Remaining` | Nombre de requetes restantes dans la fenetre |
+| `X-RateLimit-Reset` | Timestamp Unix (secondes) quand la fenetre se reinitialise |
+| `Retry-After` | Secondes a attendre avant de retenter (present uniquement sur 429) |
 
-### Example Response Headers
+### Exemple de Headers
 
 ```http
 HTTP/1.1 200 OK
@@ -120,11 +146,11 @@ Content-Type: application/json
 
 ---
 
-## Error Handling (429 Too Many Requests)
+## Gestion des Erreurs (429 Too Many Requests)
 
-When you exceed the rate limit, the API returns a `429 Too Many Requests` response:
+Quand vous depassez la limite, l'API retourne une reponse `429 Too Many Requests` :
 
-### Response Body
+### Corps de la Reponse
 
 ```json
 {
@@ -135,7 +161,7 @@ When you exceed the rate limit, the API returns a `429 Too Many Requests` respon
 }
 ```
 
-### Response Headers
+### Headers de Reponse
 
 ```http
 HTTP/1.1 429 Too Many Requests
@@ -146,51 +172,53 @@ X-RateLimit-Reset: 1704067305
 Content-Type: application/json
 ```
 
+Les violations de rate limit sont automatiquement enregistrees dans la table `rate_limit_violations` de db_analytics.
+
 ---
 
-## Environment-Based Adjustments
+## Ajustements par Environnement
 
-Rate limits vary by environment to support different use cases:
+Les limites varient par environnement :
 
-### Development Environment
+### Environnement Developpement
 
-More permissive limits for easier testing and development:
+Limites plus permissives pour faciliter les tests :
 
-| Tier | Development Limit | Production Limit |
-|------|-------------------|------------------|
+| Tier | Limite Dev | Limite Prod |
+|------|-----------|-------------|
 | AUTH_LOGIN | 20/minute | 5/minute |
 | BULK_IMPORT | 1000/minute | 500/minute |
 | BULK_DELETE | 1000/minute | 500/minute |
-| AI_BATCH | 5/hour | 1/hour |
+| AI_BATCH | 5/heure | 1/heure |
 | AI_SINGLE | 50/minute | 20/minute |
 | READ_STANDARD | 2000/minute | 1000/minute |
 | WRITE_STANDARD | 200/minute | 100/minute |
 
-### Testing Environment
+### Environnement Test
 
-Very permissive for automated test suites:
+Tres permissif pour les suites de tests automatisees :
 
-| Tier | Testing Limit | Production Limit |
-|------|---------------|------------------|
+| Tier | Limite Test | Limite Prod |
+|------|------------|-------------|
 | AUTH_LOGIN | 100/minute | 5/minute |
 | BULK_IMPORT | 1000/minute | 500/minute |
-| AI_BATCH | 20/hour | 1/hour |
+| AI_BATCH | 20/heure | 1/heure |
 | AI_SINGLE | 100/minute | 20/minute |
 | READ_STANDARD | 5000/minute | 1000/minute |
 | WRITE_STANDARD | 500/minute | 100/minute |
 | EXPORT_STANDARD | 100/minute | 50/minute |
 
-### Staging Environment
+### Environnement Staging
 
-Same limits as production for realistic testing.
+Memes limites que la production pour des tests realistes.
 
-### Production Environment
+### Environnement Production
 
-The documented limits above represent production values.
+Les limites documentees ci-dessus representent les valeurs de production.
 
 ---
 
-## Code Examples
+## Exemples de Code
 
 ### Python (requests)
 
@@ -199,27 +227,23 @@ import requests
 import time
 
 def make_api_request(url, headers, max_retries=3):
-    """Make an API request with rate limit handling."""
     for attempt in range(max_retries):
         response = requests.get(url, headers=headers)
 
-        # Log rate limit info
         remaining = response.headers.get('X-RateLimit-Remaining')
         limit = response.headers.get('X-RateLimit-Limit')
-        print(f"Rate limit: {remaining}/{limit} remaining")
+        print(f"Rate limit: {remaining}/{limit} restantes")
 
         if response.status_code == 429:
-            # Rate limited - wait and retry
             retry_after = int(response.headers.get('Retry-After', 60))
-            print(f"Rate limited. Waiting {retry_after} seconds...")
+            print(f"Rate limited. Attente {retry_after} secondes...")
             time.sleep(retry_after)
             continue
 
         return response
 
-    raise Exception("Max retries exceeded")
+    raise Exception("Max retries depasse")
 
-# Usage
 headers = {"Authorization": "Bearer your-token-here"}
 response = make_api_request(
     "https://api.productsmanager.app/api/v1/products",
@@ -240,15 +264,13 @@ async function makeApiRequest(url, options = {}, maxRetries = 3) {
       },
     });
 
-    // Log rate limit info
     const remaining = response.headers.get('X-RateLimit-Remaining');
     const limit = response.headers.get('X-RateLimit-Limit');
-    console.log(`Rate limit: ${remaining}/${limit} remaining`);
+    console.log(`Rate limit: ${remaining}/${limit} restantes`);
 
     if (response.status === 429) {
-      // Rate limited - wait and retry
       const retryAfter = parseInt(response.headers.get('Retry-After') || '60');
-      console.log(`Rate limited. Waiting ${retryAfter} seconds...`);
+      console.log(`Rate limited. Attente ${retryAfter} secondes...`);
       await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
       continue;
     }
@@ -256,56 +278,41 @@ async function makeApiRequest(url, options = {}, maxRetries = 3) {
     return response;
   }
 
-  throw new Error('Max retries exceeded');
+  throw new Error('Max retries depasse');
 }
 
-// Usage
 const response = await makeApiRequest(
   'https://api.productsmanager.app/api/v1/products'
 );
 const data = await response.json();
 ```
 
-### cURL
+---
 
-```bash
-# Make a request and observe rate limit headers
-curl -i -X GET \
-  "https://api.productsmanager.app/api/v1/products" \
-  -H "Authorization: Bearer your-token-here"
+## Bonnes Pratiques
 
-# Response will include:
-# X-RateLimit-Limit: 1000
-# X-RateLimit-Remaining: 999
-# X-RateLimit-Reset: 1704067260
-```
+1. **Surveillez les headers** : Verifiez toujours `X-RateLimit-Remaining` pour eviter de toucher les limites
+2. **Implementez le backoff** : Utilisez le backoff exponentiel quand rate limited
+3. **Utilisez le batch** : Privilegiez les endpoints bulk plutot que des requetes individuelles multiples
+4. **Cachez les reponses** : Reduisez les appels API en cachant les donnees frequemment accedees
+5. **Utilisez les webhooks** : Pour les mises a jour evenementielles plutot que le polling
+6. **Planifiez les limites** : Concevez votre integration en tenant compte des limites
 
 ---
 
-## Best Practices
+## Demander des Limites Plus Elevees
 
-1. **Monitor headers**: Always check `X-RateLimit-Remaining` to avoid hitting limits
-2. **Implement backoff**: Use exponential backoff when rate limited
-3. **Batch requests**: Use bulk endpoints instead of multiple single requests
-4. **Cache responses**: Reduce API calls by caching frequently accessed data
-5. **Use webhooks**: For event-driven updates instead of polling
-6. **Plan for limits**: Design your integration with rate limits in mind
+Pour les applications necessitant des limites plus elevees ou des quotas personnalises, contactez le support avec :
 
----
-
-## Requesting Higher Limits
-
-For applications requiring higher rate limits or custom quotas, please contact support with:
-
-- Your use case description
-- Expected request volumes
-- Specific endpoints affected
+- Description de votre cas d'usage
+- Volumes de requetes attendus
+- Endpoints specifiques concernes
 
 ---
 
-## Related Documentation
+## Documentation Associee
 
-- [Authentication](/docs/api/authentication)
+- [Authentification](/docs/api/authentication)
 - [API Endpoints](/docs/api/endpoints)
 - [Webhooks](/docs/api/webhooks)
-- [Security](/docs/technical/security)
+- [Securite](/docs/technical/security)

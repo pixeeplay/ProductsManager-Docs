@@ -5,7 +5,7 @@ type LogoProps = Omit<React.ComponentPropsWithoutRef<typeof Image>, 'src' | 'alt
 function LogoImage({ className, ...rest }: LogoProps) {
   return (
     <Image
-      src="/logo.png"
+      src="/logo.svg"
       alt="Products Manager APP"
       width={36}
       height={36}
