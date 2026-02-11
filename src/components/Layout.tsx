@@ -79,7 +79,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   let isLoginPage = pathname === '/login'
 
   if (isLoginPage) {
-    return <>{children}</>
+    return <div className="w-full">{children}</div>
   }
 
   return (
