@@ -1,4 +1,84 @@
-export const navigation = [
+export type NavigationGroup = {
+  group: string
+}
+
+export type NavigationSection = {
+  title: string
+  links: Array<{ title: string; href: string }>
+}
+
+export type NavigationItem = NavigationGroup | NavigationSection
+
+export function isGroup(item: NavigationItem): item is NavigationGroup {
+  return 'group' in item
+}
+
+export const navigation: NavigationItem[] = [
+  // ── Guide Utilisateur ──────────────────────────────
+  { group: 'Guide Utilisateur' },
+  {
+    title: 'Demarrage',
+    links: [
+      { title: 'Bienvenue', href: '/docs/guide/bienvenue' },
+      { title: 'Premiers Pas', href: '/docs/guide/premiers-pas' },
+      { title: 'Tour de l\'Interface', href: '/docs/guide/interface' },
+    ],
+  },
+  {
+    title: 'Produits',
+    links: [
+      { title: 'Gestion des Produits', href: '/docs/guide/produits' },
+      { title: 'Score de Completude', href: '/docs/guide/completude' },
+      { title: 'Recherche Produits', href: '/docs/guide/recherche' },
+    ],
+  },
+  {
+    title: 'Imports & Fournisseurs',
+    links: [
+      { title: 'Gestion des Fournisseurs', href: '/docs/guide/fournisseurs' },
+      { title: 'Importer des Produits', href: '/docs/guide/imports' },
+      { title: 'Formats Supportes', href: '/docs/guide/formats-import' },
+    ],
+  },
+  {
+    title: 'Exports & Integrations',
+    links: [
+      { title: 'Exporter vos Produits', href: '/docs/guide/exports' },
+      { title: 'Export Shopify', href: '/docs/guide/export-shopify' },
+      { title: 'Export WooCommerce', href: '/docs/guide/export-woocommerce' },
+      { title: 'Export PrestaShop', href: '/docs/guide/export-prestashop' },
+      { title: 'Export Amazon', href: '/docs/guide/export-amazon' },
+      { title: 'Synchronisation Odoo', href: '/docs/guide/sync-odoo' },
+    ],
+  },
+  {
+    title: 'Outils Avances',
+    links: [
+      { title: 'Enrichissement IA', href: '/docs/guide/enrichissement-ia' },
+      { title: 'Price Monitor', href: '/docs/guide/price-monitor' },
+      { title: 'Code2ASIN', href: '/docs/guide/code2asin' },
+      { title: 'EAN Lookup', href: '/docs/guide/ean-lookup' },
+      { title: 'Tableau de Bord', href: '/docs/guide/tableau-de-bord' },
+    ],
+  },
+  {
+    title: 'Administration',
+    links: [
+      { title: 'Utilisateurs et Roles', href: '/docs/guide/administration' },
+      { title: 'Securite et Mot de Passe', href: '/docs/guide/securite' },
+      { title: 'Configuration des Modules', href: '/docs/guide/modules' },
+    ],
+  },
+  {
+    title: 'Aide',
+    links: [
+      { title: 'FAQ', href: '/docs/guide/faq' },
+      { title: 'Resolution de Problemes', href: '/docs/guide/depannage' },
+    ],
+  },
+
+  // ── Documentation Technique ────────────────────────
+  { group: 'Documentation Technique' },
   {
     title: 'Getting Started',
     links: [
@@ -33,16 +113,6 @@ export const navigation = [
       { title: 'Search Engine', href: '/docs/modules/search-engine' },
       { title: 'Completude', href: '/docs/modules/completeness' },
       { title: 'File Explorer', href: '/docs/modules/file-explorer' },
-    ],
-  },
-  {
-    title: 'User Guides',
-    links: [
-      { title: 'Getting Started', href: '/docs/user-guides/getting-started' },
-      { title: 'Products', href: '/docs/user-guides/products' },
-      { title: 'Imports Workflow', href: '/docs/user-guides/imports-workflow' },
-      { title: 'Exports Workflow', href: '/docs/user-guides/exports-workflow' },
-      { title: 'Dashboard Usage', href: '/docs/user-guides/dashboard-usage' },
     ],
   },
   {
@@ -94,13 +164,6 @@ export const navigation = [
       { title: 'PrestaShop', href: '/docs/integrations/prestashop' },
       { title: 'WooCommerce', href: '/docs/integrations/woocommerce' },
       { title: 'Email Imports', href: '/docs/integrations/email-imports' },
-    ],
-  },
-  {
-    title: 'FAQ & Support',
-    links: [
-      { title: 'FAQ', href: '/docs/support/faq' },
-      { title: 'Troubleshooting', href: '/docs/support/troubleshooting' },
     ],
   },
   {

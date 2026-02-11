@@ -83,6 +83,52 @@ const nextConfig = {
     ]
   },
 
+  // Redirections from old URLs to new guide pages
+  async redirects() {
+    return [
+      {
+        source: '/docs/user-guides/getting-started',
+        destination: '/docs/guide/premiers-pas',
+        permanent: true,
+      },
+      {
+        source: '/docs/user-guides/products',
+        destination: '/docs/guide/produits',
+        permanent: true,
+      },
+      {
+        source: '/docs/user-guides/imports-workflow',
+        destination: '/docs/guide/imports',
+        permanent: true,
+      },
+      {
+        source: '/docs/user-guides/import-workflow',
+        destination: '/docs/guide/imports',
+        permanent: true,
+      },
+      {
+        source: '/docs/user-guides/exports-workflow',
+        destination: '/docs/guide/exports',
+        permanent: true,
+      },
+      {
+        source: '/docs/user-guides/dashboard-usage',
+        destination: '/docs/guide/tableau-de-bord',
+        permanent: true,
+      },
+      {
+        source: '/docs/support/faq',
+        destination: '/docs/guide/faq',
+        permanent: true,
+      },
+      {
+        source: '/docs/support/troubleshooting',
+        destination: '/docs/guide/depannage',
+        permanent: true,
+      },
+    ]
+  },
+
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],

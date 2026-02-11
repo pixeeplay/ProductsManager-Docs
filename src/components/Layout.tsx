@@ -47,9 +47,17 @@ function Header() {
         <MobileNavigation />
       </div>
       <div className="relative flex grow basis-0 items-center">
-        <Link href="/" aria-label="Home page">
+        <Link href="/" aria-label="Home page" className="flex items-center gap-3">
           <Logomark className="h-9 w-9 lg:hidden" />
           <Logo className="hidden h-9 w-auto fill-slate-700 lg:block dark:fill-sky-100" />
+          <div className="hidden flex-col lg:flex">
+            <span className="bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-lg font-bold text-transparent">
+              Products Manager
+            </span>
+            <span className="-mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Documentation
+            </span>
+          </div>
         </Link>
       </div>
       <div className="-my-5 mr-6 sm:mr-8 md:mr-0">
@@ -68,6 +76,11 @@ function Header() {
 export function Layout({ children }: { children: React.ReactNode }) {
   let pathname = usePathname()
   let isHomePage = pathname === '/'
+  let isLoginPage = pathname === '/login'
+
+  if (isLoginPage) {
+    return <>{children}</>
+  }
 
   return (
     <div className="flex w-full flex-col">

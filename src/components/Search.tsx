@@ -21,7 +21,7 @@ import {
 import { Dialog, DialogPanel } from '@headlessui/react'
 import clsx from 'clsx'
 
-import { navigation } from '@/lib/navigation'
+import { navigation, isGroup } from '@/lib/navigation'
 import { type Result } from '@/markdoc/search.mjs'
 
 type EmptyObject = Record<string, never>
@@ -161,10 +161,11 @@ function SearchResult({
 }) {
   let id = useId()
 
-  let sectionTitle = navigation.find((section) =>
-    section.links.find((link) => link.href === result.url.split('#')[0]),
-  )?.title
-  let hierarchy = [sectionTitle, result.pageTitle].filter(
+  let sectionTitle = navigation.filter((item) => !isGroup(item)).find((section) =>
+    'links' in section && section.links.find((link) => link.href === result.url.split('#')[0]),
+  )
+  let sectionTitleText = sectionTitle && 'title' in sectionTitle ? sectionTitle.title : undefined
+  let hierarchy = [sectionTitleText, result.pageTitle].filter(
     (x): x is string => typeof x === 'string',
   )
 

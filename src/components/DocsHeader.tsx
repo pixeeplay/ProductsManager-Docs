@@ -2,23 +2,25 @@
 
 import { usePathname } from 'next/navigation'
 
-import { navigation } from '@/lib/navigation'
+import { navigation, isGroup } from '@/lib/navigation'
 
 export function DocsHeader({ title }: { title?: string }) {
   let pathname = usePathname()
-  let section = navigation.find((section) =>
-    section.links.find((link) => link.href === pathname),
+  let section = navigation.find((item) =>
+    !isGroup(item) && 'links' in item && item.links.find((link) => link.href === pathname),
   )
 
-  if (!title && !section) {
+  let sectionTitle = section && 'title' in section ? section.title : undefined
+
+  if (!title && !sectionTitle) {
     return null
   }
 
   return (
     <header className="mb-9 space-y-1">
-      {section && (
+      {sectionTitle && (
         <p className="font-display text-sm font-medium text-sky-500">
-          {section.title}
+          {sectionTitle}
         </p>
       )}
       {title && (
