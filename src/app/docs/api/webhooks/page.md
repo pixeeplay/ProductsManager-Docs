@@ -6,7 +6,7 @@ nextjs:
     description: Documentation complète des webhooks pour recevoir des notifications en temps réel.
 ---
 
-Les webhooks permettent de recevoir des notifications HTTP en temps réel lorsque des événements se produisent dans Products Manager. {% .lead %}
+Les webhooks permettent de recevoir des notifications HTTP en temps réel lorsque des événements se produisent dans Products Manager. Ils couvrent les produits, imports, fournisseurs, stocks, prix, et les mises à jour WinDev. {% .lead %}
 
 ---
 
@@ -231,23 +231,54 @@ Déclenché quand un fournisseur est modifié.
 
 ---
 
-### Stock
+### Stock et Prix (WinDev)
 
-#### stock.low_alert
+#### stock.updated
 
-Déclenché quand un produit passe sous le seuil de stock minimum.
+Déclenché lors d'une mise à jour de stock batch via l'API WinDev.
 
 ```json
 {
-  "event": "stock.low_alert",
-  "timestamp": "2025-10-05T16:00:00Z",
+  "event": "stock.updated",
+  "timestamp": "2026-03-06T10:30:00Z",
   "data": {
-    "product_id": 1234,
-    "sku": "PROD-001",
-    "name": "Produit en Rupture",
-    "current_stock": 5,
-    "threshold": 10,
-    "supplier_id": 42
+    "source": "windev",
+    "updated_count": 42,
+    "eans": ["3700685406001", "3700685406018"]
+  }
+}
+```
+
+#### price.updated
+
+Déclenché lors d'une mise à jour de prix batch via l'API WinDev.
+
+```json
+{
+  "event": "price.updated",
+  "timestamp": "2026-03-06T10:31:00Z",
+  "data": {
+    "source": "windev",
+    "updated_count": 15,
+    "eans": ["3700685406001"]
+  }
+}
+```
+
+#### product.batch_sync
+
+Déclenché à la fin d'une synchronisation batch WinDev (`POST /windev/products/sync`).
+
+```json
+{
+  "event": "product.batch_sync",
+  "timestamp": "2026-03-06T10:35:00Z",
+  "data": {
+    "source": "windev",
+    "created": 5,
+    "updated": 37,
+    "errors": 1,
+    "total": 43
   }
 }
 ```
@@ -288,10 +319,10 @@ Pour vérifier que les webhooks proviennent bien de Products Manager, utilisez l
 
 #### Header de Signature
 
-Chaque requête webhook inclut un header `X-Webhook-Signature` :
+Chaque requête webhook inclut le header `X-PM-Signature` :
 
 ```text
-X-Webhook-Signature: sha256=abc123def456...
+X-PM-Signature: sha256=abc123def456...
 ```
 
 #### Vérification (Node.js)
@@ -311,7 +342,7 @@ function verifyWebhook(payload, signature, secret) {
 
 // Dans votre route webhook
 app.post('/webhooks/productsmanager', (req, res) => {
-  const signature = req.headers['x-webhook-signature'];
+  const signature = req.headers['x-pm-signature'];
   const payload = JSON.stringify(req.body);
 
   if (!verifyWebhook(payload, signature, YOUR_SECRET)) {
@@ -342,7 +373,7 @@ def verify_webhook(payload: str, signature: str, secret: str) -> bool:
 # Dans votre route Flask
 @app.route('/webhooks/productsmanager', methods=['POST'])
 def webhook():
-    signature = request.headers.get('X-Webhook-Signature')
+    signature = request.headers.get('X-PM-Signature')
     payload = request.get_data(as_text=True)
 
     if not verify_webhook(payload, signature, YOUR_SECRET):
@@ -561,7 +592,7 @@ function verifySignature(payload, signature) {
 }
 
 app.post('/webhooks/productsmanager', (req, res) => {
-  const signature = req.headers['x-webhook-signature'];
+  const signature = req.headers['x-pm-signature'];
   const payload = JSON.stringify(req.body);
 
   // 1. Vérifier la signature
@@ -614,8 +645,31 @@ app.listen(3000, () => {
 
 ---
 
+---
+
+## Tableau Complet des Événements
+
+| Événement | Déclencheur | Source |
+|-----------|-------------|--------|
+| `product.created` | Création produit (import, API, UI) | products router, imports |
+| `product.updated` | Modification produit | products router, WinDev PATCH/activate/deactivate |
+| `product.deleted` | Suppression produit | products router |
+| `product.batch_sync` | Sync batch WinDev | WinDev `/products/sync` |
+| `stock.updated` | MAJ stock batch | WinDev `/stock/update` |
+| `price.updated` | MAJ prix batch | WinDev `/prices/update` |
+| `import.started` | Démarrage import | Celery import tasks |
+| `import.completed` | Import terminé avec succès | Celery import tasks |
+| `import.failed` | Import échoué | Celery import tasks |
+| `supplier.created` | Création fournisseur | suppliers router |
+| `supplier.updated` | Modification fournisseur | suppliers router |
+| `ean.resolved` | EAN résolu (lookup) | EAN resolution service |
+| `test` | Test manuel | `POST /webhooks/{id}/test` |
+
+---
+
 ## Ressources Associées
 
 - [API Endpoints](/docs/api/endpoints)
-- [Authentification API](/docs/api/authentication)
+- [Authentification JWT et API Keys](/docs/api/authentication)
+- [Rate Limiting](/docs/api/rate-limiting)
 - [Sécurité](/docs/technical/security)

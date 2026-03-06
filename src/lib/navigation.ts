@@ -157,6 +157,7 @@ export const navigation: NavigationItem[] = [
   {
     title: 'Integrations',
     links: [
+      { title: 'WinDev ERP', href: '/docs/integrations/windev' },
       { title: 'Odoo ERP', href: '/docs/integrations/odoo' },
       { title: 'Amazon PA-API', href: '/docs/integrations/amazon-pa-api' },
       { title: 'MinIO', href: '/docs/integrations/minio' },

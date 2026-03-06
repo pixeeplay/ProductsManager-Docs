@@ -6,7 +6,7 @@ nextjs:
     description: "Guide complet du rate limiting de l'API Products Manager : tiers, headers, gestion des erreurs."
 ---
 
-L'API Products Manager implemente un rate limiting granulaire pour proteger contre les abus et garantir une utilisation equitable pour tous les utilisateurs. {% .lead %}
+L'API Products Manager implemente deux niveaux de rate limiting : tiers par endpoint pour les utilisateurs JWT, et limite configurable par cle API pour les integrations externes (X-API-Key). {% .lead %}
 
 ---
 
@@ -310,9 +310,94 @@ Pour les applications necessitant des limites plus elevees ou des quotas personn
 
 ---
 
+---
+
+## Rate Limiting par Cle API
+
+Depuis v4.5.62, chaque cle API (`X-API-Key`) peut avoir sa propre limite de requetes par minute, independante des tiers JWT.
+
+### Principe
+
+La limite est configuree sur la cle lors de sa creation ou modification :
+
+```bash
+PATCH https://api.productsmanager.app/api/v1/api-keys/{id}
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{"rate_limit_per_minute": 300}
+```
+
+### Fonctionnement Redis
+
+La verification utilise un **bucket par minute** :
+
+- Cle Redis : `rl:apikey:{id}:{minute_bucket}` (ex: `rl:apikey:550e8400:29023450`)
+- Incremente a chaque requete (INCR + EXPIRE 60s automatique)
+- Si `count > limit` : `429 Too Many Requests` immediat
+
+### Headers sur Chaque Reponse 2xx
+
+```http
+HTTP/1.1 200 OK
+X-RateLimit-Limit: 300
+X-RateLimit-Remaining: 257
+X-RateLimit-Reset: 1741302060
+Content-Type: application/json
+```
+
+### Reponse 429
+
+```http
+HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 300
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1741302060
+Retry-After: 60
+Content-Type: application/json
+
+{"detail": "Rate limit exceeded: 300 requests/minute allowed."}
+```
+
+### Cas Limites
+
+| Situation | Comportement |
+|-----------|-------------|
+| `rate_limit_per_minute = null` | Pas de limite (requetes illimitees) |
+| `rate_limit_per_minute = 0` | Equivalent null (pas de limite) |
+| `count == limit` | Autorisee (le depassement commence a `count > limit`) |
+| Redis indisponible | Fail open — requete autorisee, `_rl_info = null` (pas de headers) |
+
+### Bonnes Pratiques (integrations WinDev / ERP)
+
+```python
+import requests
+import time
+
+def call_windev_api(url, api_key, max_retries=3):
+    headers = {"X-API-Key": api_key}
+    for attempt in range(max_retries):
+        r = requests.get(url, headers=headers)
+
+        remaining = int(r.headers.get("X-RateLimit-Remaining", 999))
+        if remaining < 10:
+            # Ralentir proactivement avant d'atteindre la limite
+            time.sleep(1)
+
+        if r.status_code == 429:
+            retry_after = int(r.headers.get("Retry-After", 60))
+            time.sleep(retry_after)
+            continue
+
+        return r.json()
+    raise Exception("Rate limit depasse apres retries")
+```
+
+---
+
 ## Documentation Associee
 
-- [Authentification](/docs/api/authentication)
+- [Authentification JWT et X-API-Key](/docs/api/authentication)
 - [API Endpoints](/docs/api/endpoints)
 - [Webhooks](/docs/api/webhooks)
 - [Securite](/docs/technical/security)

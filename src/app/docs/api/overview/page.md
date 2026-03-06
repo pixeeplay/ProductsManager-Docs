@@ -6,7 +6,7 @@ nextjs:
     description: Architecture globale de l'API REST Products Manager, versioning, modules de routage et conventions.
 ---
 
-L'API Products Manager est construite sur FastAPI et expose plus de 47 modules de routage organises sous le prefixe `/api/v1/`. Cette page presente l'architecture globale, le versioning, les conventions de reponse et la liste complete des endpoints disponibles. {% .lead %}
+L'API Products Manager est construite sur FastAPI et expose plus de 55 modules de routage sous le prefixe `/api/v1/`. Elle supporte deux modes d'authentification (JWT utilisateur et X-API-Key application), un rate limiting Redis par cle, des webhooks sortants HMAC-SHA256, et une integration bidirectionnelle complete avec WinDev, Odoo et PrestaShop. {% .lead %}
 
 ---
 
@@ -85,19 +85,157 @@ Toutes les reponses de l'API utilisent le format JSON. Les reponses paginees sui
 
 ## Authentification
 
-L'API utilise l'authentification **JWT Bearer Token**. Toutes les requetes (sauf les endpoints publics) doivent inclure l'en-tete :
+L'API supporte **deux modes d'authentification** selon le type de client :
+
+### 1. JWT Bearer Token (utilisateurs, interface web)
 
 ```
 Authorization: Bearer <access_token>
 ```
 
-Pour obtenir un token, voir la page [Authentification](/docs/api/authentication).
+Utilise pour les endpoints metier (produits, imports, exports…). Voir [Authentification JWT](/docs/api/authentication).
+
+### 2. X-API-Key (applications externes, WinDev, scripts)
+
+```
+X-API-Key: pm_live_xxxxxxxxxxxxxxxxxxxx
+```
+
+Utilise pour les integrations machine-to-machine (WinDev, ERP, scripts automatises). Les cles sont gerees via `/api/v1/api-keys`. Voir [API Keys](#api-keys-et-integrations-externes).
+
+---
+
+## API Keys et Integrations Externes
+
+Depuis v4.5.61, ProductsManager expose des APIs dediees aux integrations machine-to-machine.
+
+### Gestion des cles API (`/api/v1/api-keys`)
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api-keys/` | Lister toutes les cles (admin) |
+| `POST /api-keys/` | Creer une cle (retourne la valeur brute une seule fois) |
+| `PATCH /api-keys/{id}` | Modifier nom / scopes / expiration |
+| `DELETE /api-keys/{id}` | Supprimer |
+| `POST /api-keys/{id}/toggle` | Activer / desactiver |
+| `POST /api-keys/{id}/rotate` | Rotation (nouvelle cle, ancienne invalidee) |
+| `GET /api-keys/{id}/stats` | Statistiques d'usage |
+
+**Scopes disponibles** :
+
+| Scope | Description |
+|-------|-------------|
+| `ext:products:read` | Lecture produits via External API |
+| `ext:products:write` | Ecriture produits via External API |
+| `windev:read` | Lecture WinDev (produits, categories, fournisseurs) |
+| `windev:write` | Ecriture WinDev (stock, prix, PATCH produit) |
+| `windev:sync` | Sync batch WinDev |
+
+**Format des cles** :
+- Production : `pm_live_<64chars>`
+- Test : `pm_test_<64chars>`
+- Stockage : prefixe clair + hash SHA-256 (valeur brute jamais stockee)
+
+---
+
+### External Products API (`/api/v1/ext`)
+
+API universelle push/pull pour n'importe quel systeme tiers.
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /ext/status` | Publique | Health check |
+| `GET /ext/products` | ext:products:read | Liste paginee (filtres : brand, supplier, active_only) |
+| `GET /ext/products/delta` | ext:products:read | Produits modifies depuis timestamp |
+| `GET /ext/products/{ean}` | ext:products:read | Produit par EAN |
+| `POST /ext/products` | ext:products:write | Upsert unique |
+| `POST /ext/products/batch` | ext:products:write | Upsert batch (max 500) |
+| `PATCH /ext/products/{ean}` | ext:products:write | Mise a jour partielle |
+
+---
+
+### Integration WinDev (`/api/v1/windev`)
+
+API bidirectionnelle complete pour WinDev ERP. Format de reponse WinDev-friendly :
+
+```json
+{"success": true, "code": 200, "message": "OK", "data": [...], "count": 42}
+```
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /windev/status` | Publique | Health check avec liste des endpoints |
+| `GET /windev/products` | windev:read | Liste paginee complete (sync initiale) |
+| `GET /windev/products/since/{ts}` | windev:read | Produits modifies depuis timestamp Unix |
+| `GET /windev/products/{ref}` | windev:read | Par EAN ou reference (actifs ET inactifs) |
+| `PATCH /windev/products/{ref}` | windev:write | Mise a jour individuelle (75 champs) |
+| `POST /windev/products/{ref}/activate` | windev:write | Reactivation |
+| `POST /windev/products/{ref}/deactivate` | windev:write | Desactivation |
+| `POST /windev/products/sync` | windev:sync | Upsert batch (max 1000) |
+| `POST /windev/stock/update` | windev:write | MAJ stocks batch (max 5000) |
+| `POST /windev/prices/update` | windev:write | MAJ prix batch (max 5000) |
+| `GET /windev/categories` | windev:read | Arbre categories |
+| `GET /windev/suppliers` | windev:read | Liste fournisseurs |
+
+**Matching** (par priorite) : EAN normalise → `manufacturer_reference` → creation si absent.
+
+Les responses produit exposent **65 champs** complets (identifiants, dimensions, fiscal, conformite, attributs physiques, sync ERP, prix et stocks inline).
+
+---
+
+### Synchronisation Odoo (`/api/v1/odoo-import`)
+
+Import ET export bidirectionnel Odoo ↔ ProductsManager.
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /odoo-import/pull-products` | Odoo → PM (avec strategie conflit : odoo_wins / pm_wins / newest_wins) |
+| `GET /odoo-import/pull-products/preview` | Apercu sans import |
+| `GET /odoo-import/products/remote` | Liste produits Odoo |
+| `GET /odoo-import/conflicts` | Produits en conflit PM ↔ Odoo |
+| `POST /odoo-import/conflicts/{id}/resolve` | Resolution manuelle (keep_pm / use_odoo) |
+| `GET /odoo-import/categories` | Categories Odoo |
+| `POST /odoo-import/push-products` | **PM → Odoo** (synchrone) |
+| `POST /odoo-import/push-products/async` | **PM → Odoo** (Celery, recommande > 200 produits) |
+
+---
+
+### Synchronisation PrestaShop (`/api/v1/prestashop-import`)
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /prestashop-import/status` | Test connexion WebService |
+| `GET /prestashop-import/products/remote` | Apercu produits PS |
+| `POST /prestashop-import/pull-products` | PS → PM |
+| `POST /prestashop-import/push-products` | **PM → PS** (synchrone) |
+| `POST /prestashop-import/push-products/async` | **PM → PS** (Celery asynchrone) |
+
+---
+
+### Webhooks Sortants (`/api/v1/webhooks`)
+
+Notifications HTTP vers des systemes externes (Zapier, Make, n8n, WinDev…).
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /webhooks/` | Liste des webhooks configures |
+| `POST /webhooks/` | Creer un webhook |
+| `GET /webhooks/events` | Catalogue des evenements disponibles |
+| `PATCH /webhooks/{id}` | Modifier |
+| `DELETE /webhooks/{id}` | Supprimer |
+| `POST /webhooks/{id}/toggle` | Activer / desactiver |
+| `POST /webhooks/{id}/test` | Declencher un payload de test |
+| `GET /webhooks/{id}/logs` | Historique livraisons |
+
+Signature : `X-PM-Signature: sha256=<hmac>` sur chaque payload.
+
+**Evenements declenchables** : `product.created`, `product.updated`, `product.deleted`, `product.batch_sync`, `stock.updated`, `price.updated`, `import.started`, `import.completed`, `import.failed`, `supplier.created`, `supplier.updated`, `ean.resolved`, `test`
 
 ---
 
 ## Modules de routage enregistres
 
-L'application enregistre **26 groupes de routage** au demarrage, couvrant l'ensemble des fonctionnalites. Le fichier `core/router_setup.py` orchestre l'enregistrement via la fonction `register_all_routers()`.
+L'application enregistre **55+ groupes de routage** au demarrage. Le fichier `core/router_setup.py` orchestre l'enregistrement via `register_all_routers()`.
 
 ### Catalogue et Produits
 

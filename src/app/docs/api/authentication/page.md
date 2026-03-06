@@ -6,7 +6,7 @@ nextjs:
     description: Guide complet d'authentification JWT pour l'API Products Manager.
 ---
 
-L'API Products Manager utilise JWT (JSON Web Tokens) pour une authentification securisee et stateless. {% .lead %}
+L'API Products Manager supporte deux modes d'authentification : JWT Bearer Token pour les utilisateurs humains, et X-API-Key pour les integrations machine-to-machine (WinDev, ERP, scripts). {% .lead %}
 
 ---
 
@@ -176,6 +176,102 @@ Les permissions sont verifiees a 3 niveaux :
 - Verification user actif a chaque requete
 - Pas de donnees sensibles dans payload
 - Rate limiting sur endpoints d'authentification (5/min)
+
+---
+
+## Authentification par Cle API (X-API-Key)
+
+Depuis v4.5.61, les integrations machine-to-machine utilisent des **cles API** a la place du JWT. Ce mode est destine aux applications externes (WinDev, ERP, scripts automatises) qui ne peuvent pas gerer un flux OAuth/refresh token.
+
+### Utilisation
+
+```bash
+GET https://api.productsmanager.app/api/v1/windev/products
+X-API-Key: pm_live_a1b2c3d4e5f6...
+```
+
+### Format des Cles
+
+| Prefixe | Environnement |
+|---------|--------------|
+| `pm_live_` | Production |
+| `pm_test_` | Test / staging |
+
+- 64 caracteres aleatoires apres le prefixe
+- Valeur brute retournee **une seule fois** a la creation (stockage du hash SHA-256 uniquement)
+- Rotation possible via `POST /api/v1/api-keys/{id}/rotate`
+
+### Scopes
+
+Chaque cle embarque un ou plusieurs scopes qui definissent les permissions :
+
+| Scope | Acces |
+|-------|-------|
+| `ext:products:read` | Lecture via External API (`/api/v1/ext`) |
+| `ext:products:write` | Ecriture via External API |
+| `windev:read` | Lecture WinDev (produits, categories, fournisseurs) |
+| `windev:write` | Ecriture WinDev (stock, prix, PATCH/activate/deactivate) |
+| `windev:sync` | Sync batch WinDev (`/products/sync`) |
+
+### Gestion des Cles
+
+```bash
+# Creer une cle
+POST https://api.productsmanager.app/api/v1/api-keys
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "name": "WinDev Production",
+  "scopes": ["windev:read", "windev:write", "windev:sync"],
+  "rate_limit_per_minute": 300,
+  "expires_at": null
+}
+```
+
+Reponse (valeur brute disponible une seule fois) :
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "WinDev Production",
+  "key": "pm_live_a1b2c3d4e5f6g7h8...",
+  "scopes": ["windev:read", "windev:write", "windev:sync"],
+  "rate_limit_per_minute": 300,
+  "expires_at": null,
+  "created_at": "2026-03-06T10:00:00Z"
+}
+```
+
+{% callout type="warning" title="Conservez la cle" %}
+La valeur brute `pm_live_...` n'est retournee qu'a la creation. Sauvegardez-la immediatement — il sera impossible de la recuperer ensuite. En cas de perte, utilisez la rotation.
+{% /callout %}
+
+### Rate Limiting par Cle
+
+Chaque cle peut avoir sa propre limite de requetes par minute (champ `rate_limit_per_minute`) :
+
+- La limite est trackee dans Redis : bucket par minute par cle
+- Si la limite est depassee : `429 Too Many Requests` avec headers :
+  ```
+  X-RateLimit-Limit: 300
+  X-RateLimit-Remaining: 0
+  X-RateLimit-Reset: 1741302000
+  Retry-After: 60
+  ```
+- Toutes les reponses 2xx incluent les headers `X-RateLimit-*` avec les valeurs courantes
+- Si Redis est indisponible : la requete passe (fail open)
+
+Voir [Rate Limiting par Cle API](/docs/api/rate-limiting#rate-limiting-par-cle-api) pour plus de details.
+
+### Rotation de Cle
+
+```bash
+POST https://api.productsmanager.app/api/v1/api-keys/{id}/rotate
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+L'ancienne cle est immediatement invalidee. Une nouvelle valeur brute est retournee.
 
 ---
 
