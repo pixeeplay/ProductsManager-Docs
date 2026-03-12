@@ -1,7 +1,7 @@
 {
   "name": "productsmanager-docs",
   "version": "1.1.0",
-  "description": "Documentation site for Product Manager APP - Centralized import and AI enrichment platform",
+  "description": "Documentation site for Products Manager APP - Centralized import and AI enrichment platform",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

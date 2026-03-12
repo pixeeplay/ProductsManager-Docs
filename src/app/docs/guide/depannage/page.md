@@ -285,7 +285,7 @@ En cas de doute sur la disponibilite de Products Manager APP :
 
 Si vous n'avez pas reussi a resoudre votre probleme avec ce guide, contactez l'equipe de support :
 
-- **Email** : webmaster@pixeeplay.com
+- **Email** : hello-pm@pixeeplay.fr
 - **Documentation technique** : [Introduction a Products Manager](/docs/getting-started/introduction)
 - **FAQ** : [Consulter la FAQ](/docs/guide/faq)
 

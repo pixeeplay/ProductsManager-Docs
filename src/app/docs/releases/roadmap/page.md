@@ -351,7 +351,7 @@ Full product management capabilities on the go.
 
 ### Contact
 
-- **Engineering:** webmaster@pixeeplay.com
+- **Engineering:** hello-pm@pixeeplay.fr
 - **Repository:** [GitHub](https://github.com/pixeeplay/productsmanager-app)
 - **Documentation:** [docs.productsmanager.app](/docs)
 

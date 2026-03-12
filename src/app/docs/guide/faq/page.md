@@ -33,7 +33,7 @@ Non. Chaque adresse email est unique au sein d'une organisation. Un meme email n
 Rendez-vous dans **Parametres** > **Securite** > **Activer l'authentification a deux facteurs**. Scannez le QR code affiche avec une application d'authentification compatible (Google Authenticator, Authy, Microsoft Authenticator). Saisissez le code a 6 chiffres genere par l'application pour confirmer l'activation. Conservez precieusement les codes de recuperation qui vous sont fournis.
 
 {% callout type="warning" %}
-Si vous perdez l'acces a votre application d'authentification et que vous n'avez plus vos codes de recuperation, seul un administrateur pourra desactiver la 2FA sur votre compte. Contactez le support a webmaster@pixeeplay.com.
+Si vous perdez l'acces a votre application d'authentification et que vous n'avez plus vos codes de recuperation, seul un administrateur pourra desactiver la 2FA sur votre compte. Contactez le support a hello-pm@pixeeplay.fr.
 {% /callout %}
 
 ---
@@ -189,8 +189,8 @@ Chaque plan dispose d'une limite de produits :
 
 | Plan | Limite de produits |
 |------|-------------------|
-| **Standard** | 100 000 produits |
-| **Business** | 500 000 produits |
+| **Starter** | 3 000 produits |
+| **Business** | 10 000 produits |
 | **Enterprise** | Illimite |
 
 Si vous atteignez la limite de votre plan, vous ne pourrez plus creer de nouveaux produits. Contactez votre administrateur pour envisager une mise a niveau.
@@ -212,8 +212,8 @@ Si l'export vers une plateforme e-commerce echoue avec une erreur de connexion, 
 
 Le nombre maximal de produits depend de votre plan d'abonnement :
 
-- **Standard** : jusqu'a 100 000 produits
-- **Business** : jusqu'a 500 000 produits
+- **Starter** : jusqu'à 3 000 produits
+- **Business** : jusqu'à 10 000 produits
 - **Enterprise** : nombre illimite de produits
 
 Les performances de l'application sont optimisees pour gerer des catalogues de grande taille sans degradation notable.
@@ -228,7 +228,7 @@ Si vous constatez des lenteurs, suivez ces etapes :
 4. **Reduisez l'affichage** : diminuez le nombre de produits affiches par page (25 au lieu de 100)
 5. **Videz le cache** : effacez le cache et les cookies de votre navigateur
 
-Si le probleme persiste, contactez le support a webmaster@pixeeplay.com.
+Si le probleme persiste, contactez le support a hello-pm@pixeeplay.fr.
 
 ### Quelle est la disponibilite du service ?
 
@@ -240,7 +240,7 @@ Products Manager APP garantit un taux de disponibilite de **99.9%** (SLA). Les m
 
 Si vous n'avez pas trouve la reponse a votre question dans cette FAQ :
 
-- **Email support** : webmaster@pixeeplay.com
+- **Email support** : hello-pm@pixeeplay.fr
 - **Documentation technique** : [Introduction a Products Manager](/docs/getting-started/introduction)
 - **Guide de depannage** : [Resolution de Problemes](/docs/guide/depannage)
 

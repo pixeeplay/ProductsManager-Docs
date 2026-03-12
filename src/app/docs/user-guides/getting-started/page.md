@@ -20,7 +20,7 @@ Avant de commencer, assurez-vous d'avoir :
 - Des **identifiants de connexion** (email et mot de passe)
 
 {% callout type="note" %}
-Vous n'avez pas encore de compte ? Contactez **webmaster@pixeeplay.com** pour obtenir un accès ou une démo gratuite.
+Vous n'avez pas encore de compte ? Contactez **hello-pm@pixeeplay.fr** pour obtenir un accès ou une démo gratuite.
 {% /callout %}
 
 ---
@@ -329,7 +329,7 @@ Contactez votre administrateur si vous avez besoin de permissions supplémentair
 
 ### Support Technique
 
-- **Email** : webmaster@pixeeplay.com
+- **Email** : hello-pm@pixeeplay.fr
 - **Documentation** : [docs.productsmanager.app](https://docs.productsmanager.app)
 - **GitHub Issues** : [Signaler un bug](https://github.com/pixeeplay/Suppliers-Import/issues)
 

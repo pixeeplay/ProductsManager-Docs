@@ -613,4 +613,4 @@ Maintenant que l'installation est complète :
 
 - **Documentation** : https://docs.productsmanager.app
 - **GitHub Issues** : https://github.com/pixeeplay/Suppliers-Import/issues
-- **Email** : webmaster@pixeeplay.com
+- **Email** : hello-pm@pixeeplay.fr

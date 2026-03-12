@@ -104,4 +104,4 @@ Products Manager APP v4.5.62 repose sur une architecture moderne et performante 
 - **Documentation**: [docs.productsmanager.app](https://docs.productsmanager.app)
 - **Application**: [productsmanager.app](https://productsmanager.app)
 - **API**: [api.productsmanager.app](https://api.productsmanager.app)
-- **Contact**: webmaster@pixeeplay.com
+- **Contact**: hello-pm@pixeeplay.fr

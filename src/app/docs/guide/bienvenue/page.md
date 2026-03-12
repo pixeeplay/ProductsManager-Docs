@@ -90,7 +90,7 @@ Si vous decouvrez Products Manager APP, nous vous recommandons de suivre ces eta
 
 Si vous rencontrez un probleme ou avez une question qui n'est pas couverte par ce guide :
 
-- **Email** : webmaster@pixeeplay.com
+- **Email** : hello-pm@pixeeplay.fr
 - **Documentation technique** : [docs.productsmanager.app](https://docs.productsmanager.app)
 - **Application** : [productsmanager.app](https://productsmanager.app)
 - **FAQ** : [Consulter la FAQ](/docs/guide/faq)

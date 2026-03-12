@@ -19,7 +19,7 @@ Avant de commencer, assurez-vous de disposer des elements suivants :
 - Une **connexion Internet stable**
 
 {% callout type="note" %}
-Vous n'avez pas encore de compte ? Contactez votre administrateur ou ecrivez a **webmaster@pixeeplay.com** pour obtenir un acces ou une demonstration gratuite.
+Vous n'avez pas encore de compte ? Contactez votre administrateur ou ecrivez a **hello-pm@pixeeplay.fr** pour obtenir un acces ou une demonstration gratuite.
 {% /callout %}
 
 ---
@@ -194,5 +194,5 @@ Maintenant que vous avez pris en main les bases, explorez les fonctionnalites pl
 
 - **FAQ** : [Consulter la FAQ](/docs/guide/faq) pour les questions frequentes
 - **Depannage** : [Resolution de Problemes](/docs/guide/depannage) pour les problemes courants
-- **Email** : webmaster@pixeeplay.com
+- **Email** : hello-pm@pixeeplay.fr
 - **Documentation technique** : [docs.productsmanager.app](https://docs.productsmanager.app)

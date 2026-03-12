@@ -19,7 +19,7 @@ Avant de commencer, assurez-vous d'avoir :
 - Un fichier fournisseur (Excel, CSV) ou accès FTP/API
 
 {% callout type="note" %}
-Vous n'avez pas encore de compte ? Contactez webmaster@pixeeplay.com pour obtenir un accès démo gratuit.
+Vous n'avez pas encore de compte ? Contactez hello-pm@pixeeplay.fr pour obtenir un accès démo gratuit.
 {% /callout %}
 
 ---
@@ -134,6 +134,6 @@ Après ces 5 étapes, vous avez :
 
 ## Besoin d'Aide ?
 
-- **Email**: webmaster@pixeeplay.com
+- **Email**: hello-pm@pixeeplay.fr
 - **Documentation**: [docs.productsmanager.app](https://docs.productsmanager.app)
 - **GitHub**: [Issues](https://github.com/pixeeplay/Suppliers-Import/issues)

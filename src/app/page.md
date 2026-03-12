@@ -250,5 +250,5 @@ Products Manager APP v4.5.62 utilise une architecture moderne et scalable :
 - **Documentation**: [docs.productsmanager.app](https://docs.productsmanager.app)
 - **Application**: [productsmanager.app](https://productsmanager.app)
 - **API**: [api.productsmanager.app](https://api.productsmanager.app)
-- **Email**: webmaster@pixeeplay.com
+- **Email**: hello-pm@pixeeplay.fr
 - **GitHub**: [Suppliers-Import](https://github.com/pixeeplay/Suppliers-Import)
