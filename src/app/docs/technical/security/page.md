@@ -13,7 +13,7 @@ Le système ProductsManager implémente une architecture de sécurité multi-cou
 
 ## Score de Sécurité
 
-{% callout type="success" title="Audit Sécurité v4.5.58" %}
+{% callout type="success" title="Audit Sécurité v4.5.62" %}
 **Score Global : 91/100 (A)** | **0 CVE critiques** | **93.4% endpoints protégés** | **29 permissions granulaires** | **8 553 tests passent (100%)**
 {% /callout %}
 

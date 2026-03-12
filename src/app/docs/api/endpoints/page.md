@@ -6,7 +6,7 @@ nextjs:
     description: Documentation complète des endpoints REST de l'API Products Manager.
 ---
 
-L'API Products Manager v4.5.58 expose 47+ routeurs REST pour gérer produits, fournisseurs, imports, IA, prix et analytics. La plupart des endpoints nécessitent une authentification JWT (sauf health checks et modules status). {% .lead %}
+L'API Products Manager v4.5.62 expose 47+ routeurs REST pour gérer produits, fournisseurs, imports, IA, prix et analytics. La plupart des endpoints nécessitent une authentification JWT (sauf health checks et modules status). {% .lead %}
 
 ---
 
@@ -490,7 +490,7 @@ Si vous dépassez la limite, vous recevrez une erreur **429 Too Many Requests**.
 
 ## Modules API Complets (47+ routeurs)
 
-Products Manager v4.5.58 expose 47+ routeurs API organises par domaine fonctionnel. Voici la liste complete :
+Products Manager v4.5.62 expose 47+ routeurs API organises par domaine fonctionnel. Voici la liste complete :
 
 ### Authentification & Utilisateurs
 

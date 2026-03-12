@@ -445,9 +445,9 @@ Le webhook secret est disponible dans Products Manager :
 
 ### Support
 
-- **Email** : integrations@productsmanager.com
-- **Documentation** : [https://docs.productsmanager.com](https://docs.productsmanager.com)
-- **Status** : [https://status.productsmanager.com](https://status.productsmanager.com)
+- **Email** : hello-pm@pixeeplay.fr
+- **Documentation** : [https://docs.productsmanager.app](https://docs.productsmanager.app)
+- **Status** : [https://status.productsmanager.app](https://status.productsmanager.app)
 
 ---
 

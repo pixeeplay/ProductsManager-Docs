@@ -13,7 +13,7 @@ L'import par email est une fonctionnalite planifiee qui permettra de recevoir au
 ## Statut de la fonctionnalite
 
 {% callout type="warning" title="Fonctionnalite planifiee" %}
-L'import par email n'est pas encore implemente dans la version actuelle de Products Manager (v4.5.58). Cette page decrit l'architecture prevue et les specifications fonctionnelles.
+L'import par email n'est pas encore implemente dans la version actuelle de Products Manager (v4.5.62). Cette page decrit l'architecture prevue et les specifications fonctionnelles.
 {% /callout %}
 
 ---

@@ -621,7 +621,7 @@ Pour l'historique complet des commits et changements detailles, consultez :
 
 Recevez les notifications de nouvelles versions :
 
-- **Email** : Abonnez-vous a [releases@productsmanager.com](mailto:releases@productsmanager.com?subject=Subscribe)
+- **Email** : Abonnez-vous a [hello-pm@pixeeplay.fr](mailto:hello-pm@pixeeplay.fr?subject=Subscribe)
 - **RSS Feed** : [https://github.com/pixeeplay/Products-Manager/releases.atom](https://github.com/pixeeplay/Products-Manager/releases.atom)
 
 ---
@@ -632,4 +632,4 @@ Vous avez trouve un bug ou souhaitez proposer une fonctionnalite ?
 
 - **Issues** : [https://github.com/pixeeplay/Products-Manager/issues](https://github.com/pixeeplay/Products-Manager/issues)
 - **Discussions** : [https://github.com/pixeeplay/Products-Manager/discussions](https://github.com/pixeeplay/Products-Manager/discussions)
-- **Email** : [support@productsmanager.com](mailto:support@productsmanager.com)
+- **Email** : [hello-pm@pixeeplay.fr](mailto:hello-pm@pixeeplay.fr)

@@ -3,7 +3,7 @@ title: Recherche Produits
 nextjs:
   metadata:
     title: Recherche Produits - Products Manager APP
-    description: Guide complet de la recherche produits dans Products Manager v4.5.58 - recherche rapide, filtres avances, raccourcis clavier et recherches sauvegardees.
+    description: Guide complet de la recherche produits dans Products Manager v4.5.62 - recherche rapide, filtres avances, raccourcis clavier et recherches sauvegardees.
 ---
 
 Trouvez n'importe quel produit en quelques secondes grace au moteur de recherche Meilisearch. Recherche instantanee par EAN, SKU, titre, marque ou ASIN, filtres avances et recherches sauvegardees pour un acces rapide a vos donnees. {% .lead %}

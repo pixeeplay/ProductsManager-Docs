@@ -769,5 +769,5 @@ migrations/
 - [Security Architecture](/docs/technical/security)
 
 {% callout type="info" title="Database en Production" %}
-Actuellement : **7 bases PostgreSQL** (db_core, db_catalog, db_imports, db_suppliers, db_media, db_code2asin, db_analytics), pools optimises par domaine, connexions asyncpg, cache Redis L1+L2. Version : v4.5.58.
+Actuellement : **7 bases PostgreSQL** (db_core, db_catalog, db_imports, db_suppliers, db_media, db_code2asin, db_analytics), pools optimises par domaine, connexions asyncpg, cache Redis L1+L2. Version : v4.5.62.
 {% /callout %}

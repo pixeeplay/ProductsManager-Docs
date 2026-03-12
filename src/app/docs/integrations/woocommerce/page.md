@@ -568,8 +568,8 @@ Si vous utilisez WordPress Multisite :
 
 ### Support
 
-- **Email** : integrations@productsmanager.com
-- **Documentation** : [https://docs.productsmanager.com](https://docs.productsmanager.com)
+- **Email** : hello-pm@pixeeplay.fr
+- **Documentation** : [https://docs.productsmanager.app](https://docs.productsmanager.app)
 - **Support WooCommerce** : [https://woocommerce.com/my-account/create-a-ticket/](https://woocommerce.com/my-account/create-a-ticket/)
 
 ---

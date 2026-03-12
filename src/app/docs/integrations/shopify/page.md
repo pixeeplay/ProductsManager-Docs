@@ -580,8 +580,8 @@ L'application Products Manager respecte toutes les exigences Shopify :
 
 ### Support
 
-- **Email** : integrations@productsmanager.com
-- **Documentation** : [https://docs.productsmanager.com](https://docs.productsmanager.com)
+- **Email** : hello-pm@pixeeplay.fr
+- **Documentation** : [https://docs.productsmanager.app](https://docs.productsmanager.app)
 - **Statut API Shopify** : [https://www.shopifystatus.com](https://www.shopifystatus.com)
 
 ---

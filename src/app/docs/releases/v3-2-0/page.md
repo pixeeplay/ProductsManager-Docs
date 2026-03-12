@@ -579,9 +579,9 @@ Cette version est 100% rétrocompatible.
 
 ## 📞 Support
 
-- **Documentation** : [https://docs.productsmanager.com](/docs)
+- **Documentation** : [https://docs.productsmanager.app](/docs)
 - **Issues** : [GitHub Issues](https://github.com/pixeeplay/Products-Manager/issues)
-- **Email** : support@productsmanager.com
+- **Email** : hello-pm@pixeeplay.fr
 
 ---
 

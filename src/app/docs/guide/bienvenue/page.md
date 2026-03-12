@@ -56,7 +56,7 @@ Chaque page du guide est independante. Vous pouvez naviguer directement vers la 
 
 ## Version Actuelle
 
-Ce guide couvre la version **v4.5.58** de Products Manager APP. Les fonctionnalites decrites correspondent a cette version et aux mises a jour cumulees depuis la v4.5.0.
+Ce guide couvre la version **v4.5.62** de Products Manager APP. Les fonctionnalites decrites correspondent a cette version et aux mises a jour cumulees depuis la v4.5.0.
 
 Pour consulter les nouveautes et les changements entre les versions, rendez-vous sur le [Changelog](/docs/releases/changelog).
 

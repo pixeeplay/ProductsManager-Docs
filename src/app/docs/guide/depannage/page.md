@@ -3,7 +3,7 @@ title: Resolution de Problemes
 nextjs:
   metadata:
     title: Resolution de Problemes - Guide Utilisateur Products Manager APP
-    description: "Guide de depannage de Products Manager APP v4.5.58. Diagnostiquez et resolvez les problemes de connexion, d'import, d'export, de performance, d'affichage et d'API."
+    description: "Guide de depannage de Products Manager APP v4.5.62. Diagnostiquez et resolvez les problemes de connexion, d'import, d'export, de performance, d'affichage et d'API."
 ---
 
 Identifiez et resolvez rapidement les problemes les plus courants rencontres dans Products Manager APP grace a ce guide de depannage. {% .lead %}

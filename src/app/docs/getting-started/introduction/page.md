@@ -72,7 +72,7 @@ Synchronisez avec Odoo, PrestaShop, et plus encore. 8 serveurs MCP avec 42 outil
 
 ## Architecture Technique
 
-Products Manager APP v4.5.58 repose sur une architecture moderne et performante :
+Products Manager APP v4.5.62 repose sur une architecture moderne et performante :
 
 - **Backend** : FastAPI (Python 3.11+), SQLAlchemy async
 - **Frontend** : Next.js 15 (App Router) + React 18, TypeScript, Tailwind CSS, Shadcn UI

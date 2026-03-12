@@ -3,7 +3,7 @@ title: Gestion des Produits
 nextjs:
   metadata:
     title: Gestion des Produits - Products Manager APP
-    description: Guide complet pour creer, modifier, organiser et gerer vos produits dans Products Manager v4.5.58 - structure, statuts, images, variantes et actions en masse.
+    description: Guide complet pour creer, modifier, organiser et gerer vos produits dans Products Manager v4.5.62 - structure, statuts, images, variantes et actions en masse.
 ---
 
 Maitrisez la gestion complete de votre catalogue produits : creation, edition, statuts, images, variantes et actions en masse pour un catalogue optimise et a jour. {% .lead %}

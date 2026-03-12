@@ -3,7 +3,7 @@ title: Score de Completude
 nextjs:
   metadata:
     title: Score de Completude - Products Manager APP
-    description: Comprendre et ameliorer le score de completude de vos fiches produit dans Products Manager v4.5.58 - calcul, niveaux, bonnes pratiques et impact sur les exports.
+    description: Comprendre et ameliorer le score de completude de vos fiches produit dans Products Manager v4.5.62 - calcul, niveaux, bonnes pratiques et impact sur les exports.
 ---
 
 Evaluez la qualite de vos fiches produit grace au score de completude. Ce pourcentage mesure le remplissage des champs de chaque produit et vous guide pour atteindre un catalogue pret a etre publie sur vos canaux de vente. {% .lead %}

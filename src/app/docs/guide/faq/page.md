@@ -3,7 +3,7 @@ title: FAQ
 nextjs:
   metadata:
     title: FAQ - Guide Utilisateur Products Manager APP
-    description: "Foire aux questions de Products Manager APP v4.5.58. Retrouvez les reponses aux questions les plus frequentes sur les comptes, produits, imports, exports, fournisseurs et performances."
+    description: "Foire aux questions de Products Manager APP v4.5.62. Retrouvez les reponses aux questions les plus frequentes sur les comptes, produits, imports, exports, fournisseurs et performances."
 ---
 
 Retrouvez les reponses aux questions les plus frequemment posees par les utilisateurs de Products Manager APP. {% .lead %}

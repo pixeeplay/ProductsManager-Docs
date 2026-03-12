@@ -491,8 +491,8 @@ Ne synchronisez que certaines catégories PrestaShop :
 
 ### Support
 
-- **Email** : integrations@productsmanager.com
-- **Documentation** : [https://docs.productsmanager.com](https://docs.productsmanager.com)
+- **Email** : hello-pm@pixeeplay.fr
+- **Documentation** : [https://docs.productsmanager.app](https://docs.productsmanager.app)
 - **Forum PrestaShop** : [https://www.prestashop.com/forums](https://www.prestashop.com/forums)
 
 ---

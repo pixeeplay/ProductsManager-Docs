@@ -221,7 +221,7 @@ thumbnails = relationship("MediaThumbnail", back_populates="media_file")
 
 ### Current Production Statistics
 
-Based on the v4.5.12 deployment:
+Based on the v4.5.62 deployment:
 
 | Metric | Value |
 |--------|-------|

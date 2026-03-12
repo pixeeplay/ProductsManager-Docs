@@ -38,7 +38,7 @@ Products Manager APP est une **solution SaaS** conçue pour les e-commerçants q
 - **Prix non compétitifs** : Veille concurrentielle sur +16 plateformes e-commerce
 - **Codes EAN manquants** : Recherche automatique via Amazon Product Advertising API
 
-### Métriques Système (v4.5.12)
+### Métriques Système (v4.5.62)
 
 - **Health Score**: 9.5/10 (Grade A+)
 - **Test Coverage**: 78% (6,842 tests)
@@ -48,7 +48,7 @@ Products Manager APP est une **solution SaaS** conçue pour les e-commerçants q
 
 ---
 
-## Nouvelles Fonctionnalités v4.5.12
+## Nouvelles Fonctionnalités v4.5.62
 
 ### Odoo ERP Integration
 
@@ -192,7 +192,7 @@ Synchronisez vos données avec vos outils existants :
 
 ## Stack Technique
 
-Products Manager APP v4.5.12 utilise une architecture moderne et scalable :
+Products Manager APP v4.5.62 utilise une architecture moderne et scalable :
 
 **Backend**:
 - FastAPI (Python 3.11)

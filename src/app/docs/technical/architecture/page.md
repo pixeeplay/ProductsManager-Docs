@@ -622,5 +622,5 @@ code2asin-cache/         --> Cache resultats Amazon
 - [Performance Baseline](/docs/technical/performance)
 
 {% callout type="info" title="Architecture en Production" %}
-Cette architecture supporte actuellement des dizaines de milliers de produits avec des temps de reponse p95 < 500ms et un taux de disponibilite de 99.9%. Version actuelle : v4.5.58 avec 17 modules, 8 serveurs MCP et 47+ routeurs API.
+Cette architecture supporte actuellement des dizaines de milliers de produits avec des temps de reponse p95 < 500ms et un taux de disponibilite de 99.9%. Version actuelle : v4.5.62 avec 17 modules, 8 serveurs MCP et 47+ routeurs API.
 {% /callout %}

@@ -652,10 +652,10 @@ Cette version est 100% rétrocompatible avec v3.2.0.
 
 ## 📞 Support
 
-- **Documentation** : [https://docs.productsmanager.com](/docs)
+- **Documentation** : [https://docs.productsmanager.app](/docs)
 - **Issues** : [GitHub Issues](https://github.com/pixeeplay/Products-Manager/issues)
 - **Discord** : [Join our community](https://discord.gg/productsmanager)
-- **Email** : support@productsmanager.com
+- **Email** : hello-pm@pixeeplay.fr
 
 ---
 
