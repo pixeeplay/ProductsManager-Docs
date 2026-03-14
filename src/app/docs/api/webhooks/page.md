@@ -667,6 +667,81 @@ app.listen(3000, () => {
 
 ---
 
+---
+
+## Webhooks Entrants — Connecteurs Plateformes (v4.9.0)
+
+En plus des webhooks sortants, ProductsManager peut **recevoir** des webhooks des plateformes e-commerce pour être notifié des mises à jour en temps réel.
+
+### Shopify
+
+URL à configurer dans votre Shopify Admin → Settings → Notifications → Webhooks :
+
+```
+POST https://api.productsmanager.app/api/v1/connectors/shopify/webhook
+```
+
+**Vérification :** HMAC-SHA256 via header `X-Shopify-Hmac-Sha256` (base64). Configurez le `webhook_secret` dans les credentials du connecteur.
+
+**Topics supportés :** `products/create`, `products/update`, `products/delete`, `inventory_levels/update`
+
+---
+
+### WooCommerce
+
+URL à configurer dans WooCommerce → Settings → Advanced → Webhooks :
+
+```
+POST https://api.productsmanager.app/api/v1/connectors/woocommerce/webhook
+```
+
+**Vérification :** HMAC-SHA256 via header `X-Wc-Webhook-Signature` (base64).
+
+**Topics supportés :** `product.created`, `product.updated`, `product.deleted`
+
+---
+
+### BigCommerce
+
+URL à configurer dans BigCommerce → Advanced Settings → Webhooks :
+
+```
+POST https://api.productsmanager.app/api/v1/connectors/bigcommerce/webhook
+```
+
+**Vérification :** Token statique via header `X-Webhook-Token`. Configurez `webhook_token` dans `sync_options` du connecteur.
+
+**Topics supportés :** `store/product/updated`, `store/product/created`, `store/inventory/updated`
+
+---
+
+### Magento 2
+
+Endpoint pour le module PHP Magento 2 qui push les événements vers PM :
+
+```
+POST https://api.productsmanager.app/api/v1/connectors/magento/push
+```
+
+**Auth :** Basic Auth. Configurez `webhook_login` et `webhook_password` dans les credentials.
+
+{% callout type="warning" title="Fail-closed" %}
+Si aucun `webhook_password` n'est configuré dans le connecteur, l'endpoint rejette toutes les requêtes (comportement fail-closed).
+{% /callout %}
+
+---
+
+### Tableau Comparatif
+
+| Plateforme | URL | Auth | Header |
+|-----------|-----|------|--------|
+| Shopify | `/connectors/shopify/webhook` | HMAC-SHA256 | `X-Shopify-Hmac-Sha256` |
+| WooCommerce | `/connectors/woocommerce/webhook` | HMAC-SHA256 | `X-Wc-Webhook-Signature` |
+| BigCommerce | `/connectors/bigcommerce/webhook` | Token statique | `X-Webhook-Token` |
+| Magento 2 | `/connectors/magento/push` | Basic Auth | `Authorization` |
+
+---
+
 ## Ressources Associées
 
 - [API Endpoints](/docs/api/endpoints)

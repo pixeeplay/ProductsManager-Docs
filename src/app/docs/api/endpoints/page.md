@@ -6,7 +6,7 @@ nextjs:
     description: Documentation complète des endpoints REST de l'API Products Manager.
 ---
 
-L'API Products Manager v4.5.62 expose 47+ routeurs REST pour gérer produits, fournisseurs, imports, IA, prix et analytics. La plupart des endpoints nécessitent une authentification JWT (sauf health checks et modules status). {% .lead %}
+L'API Products Manager v4.9.0 expose 60+ routeurs REST pour gérer produits, fournisseurs, imports, IA, prix et analytics. La plupart des endpoints nécessitent une authentification JWT (sauf health checks et modules status). {% .lead %}
 
 ---
 
@@ -167,6 +167,145 @@ Import en masse de produits (max 10 000 produits par requête).
   ],
   "update_existing": true
 }
+```
+
+---
+
+## Connecteurs Plateformes (v4.9.0)
+
+Module de synchronisation bidirectionnelle avec 11 plateformes e-commerce et ERP.
+
+### GET /connectors/platforms
+
+Liste toutes les plateformes disponibles.
+
+```bash
+curl https://api.productsmanager.app/api/v1/connectors/platforms
+```
+
+Réponse :
+```json
+[
+  {"id": "shopify", "name": "Shopify", "tier": 1, "capabilities": ["push_products", "pull_products", "push_stock", "push_prices", "receive_webhook"]},
+  {"id": "woocommerce", "name": "WooCommerce", "tier": 1, "capabilities": ["push_products", "pull_products", "push_stock", "push_prices", "receive_webhook"]},
+  {"id": "magento2", "name": "Magento 2 / Adobe Commerce", "tier": 1, "capabilities": ["push_products", "pull_products", "push_stock", "push_prices"]},
+  ...
+]
+```
+
+---
+
+### GET /connectors
+
+Liste les connecteurs configurés. Requiert JWT + `admin:settings`.
+
+```bash
+curl https://api.productsmanager.app/api/v1/connectors \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+### POST /connectors
+
+Crée un nouveau connecteur.
+
+#### Body (JSON)
+
+```json
+{
+  "platform_id": "shopify",
+  "name": "Ma boutique Shopify",
+  "credentials": {
+    "shop_url": "https://ma-boutique.myshopify.com",
+    "access_token": "shpat_xxxxxxxxxxxx",
+    "webhook_secret": "mon_secret_webhook"
+  },
+  "sync_options": {
+    "auto_sync_stock": true,
+    "auto_sync_prices": false
+  }
+}
+```
+
+**Sécurité :** Les URLs sont validées contre les attaques SSRF. Les credentials sensibles sont chiffrés (Fernet AES-128) en base de données.
+
+---
+
+### POST /connectors/{id}/test
+
+Teste la connexion à la plateforme.
+
+```bash
+curl -X POST https://api.productsmanager.app/api/v1/connectors/uuid-ici/test \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Réponse :
+```json
+{"success": true, "message": "Connected to Shopify 2024-01", "latency_ms": 243}
+```
+
+---
+
+### POST /connectors/{id}/sync/push-products
+
+Déclenche un push de produits PM → plateforme (asynchrone Celery).
+
+```bash
+curl -X POST https://api.productsmanager.app/api/v1/connectors/uuid-ici/sync/push-products \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"product_ids": ["uuid-1", "uuid-2"]}'
+```
+
+Réponse :
+```json
+{"task_id": "celery-task-uuid", "status": "queued", "message": "Push produits démarré"}
+```
+
+---
+
+### POST /connectors/{id}/sync/push-stock
+
+Push des stocks en temps réel vers la plateforme.
+
+---
+
+### POST /connectors/{id}/sync/push-prices
+
+Push des prix vers la plateforme.
+
+---
+
+### GET /connectors/{id}/jobs
+
+Historique des jobs de synchronisation (max 200 résultats).
+
+```json
+[
+  {
+    "id": "job-uuid",
+    "job_type": "push_products",
+    "status": "completed",
+    "pushed": 145,
+    "errors": 2,
+    "duration_ms": 8340,
+    "completed_at": "2026-03-14T10:30:00Z"
+  }
+]
+```
+
+---
+
+### OpenAPI par plateforme
+
+Chaque plateforme dispose de sa propre spec OpenAPI :
+
+```bash
+GET /api/v1/openapi-export/connectors/shopify
+GET /api/v1/openapi-export/connectors/woocommerce
+# etc.
 ```
 
 ---
@@ -488,9 +627,9 @@ Si vous dépassez la limite, vous recevrez une erreur **429 Too Many Requests**.
 
 ---
 
-## Modules API Complets (47+ routeurs)
+## Modules API Complets (60+ routeurs)
 
-Products Manager v4.5.62 expose 47+ routeurs API organises par domaine fonctionnel. Voici la liste complete :
+Products Manager v4.9.0 expose 60+ routeurs API organises par domaine fonctionnel. Voici la liste complete :
 
 ### Authentification & Utilisateurs
 
@@ -569,6 +708,7 @@ Products Manager v4.5.62 expose 47+ routeurs API organises par domaine fonctionn
 |---------|--------|-------------|
 | `odoo` | `/api/v1/odoo` | Synchronisation Odoo ERP |
 | `prestashop` | `/api/v1/prestashop` | Synchronisation PrestaShop |
+| `connectors` | `/api/v1/connectors` | Connecteurs plateformes e-commerce (Shopify, WooCommerce, Magento2, BigCommerce, SFCC, SAP Commerce, WiziShop, CDiscount, Fnac, Sylius, Squarespace) |
 
 ### Prix & Concurrence
 
@@ -596,7 +736,7 @@ Products Manager v4.5.62 expose 47+ routeurs API organises par domaine fonctionn
 | Routeur | Prefix | Description |
 |---------|--------|-------------|
 | `settings` | `/api/v1/settings` | Parametres application |
-| `modules` | `/api/v1/modules` | Gestion des 17 modules (status, enable/disable, order) |
+| `modules` | `/api/v1/modules` | Gestion des 20 modules (status, enable/disable, order) |
 | `notifications` | `/api/v1/notifications` | Notifications utilisateur |
 | `email_settings` | `/api/v1/email-settings` | Configuration email |
 

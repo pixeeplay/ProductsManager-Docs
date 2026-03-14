@@ -235,7 +235,7 @@ Signature : `X-PM-Signature: sha256=<hmac>` sur chaque payload.
 
 ## Modules de routage enregistres
 
-L'application enregistre **55+ groupes de routage** au demarrage. Le fichier `core/router_setup.py` orchestre l'enregistrement via `register_all_routers()`.
+L'application enregistre **60+ groupes de routage** au demarrage. Le fichier `core/router_setup.py` orchestre l'enregistrement via `register_all_routers()`.
 
 ### Catalogue et Produits
 
@@ -281,6 +281,7 @@ L'application enregistre **55+ groupes de routage** au demarrage. Le fichier `co
 | `/api/v1/amazon` | Amazon | Configuration PA-API Amazon |
 | `/api/v1/odoo` | Odoo Integration | Synchronisation ERP Odoo |
 | `/api/v1/prestashop` | PrestaShop | Synchronisation e-commerce PrestaShop |
+| `/api/v1/connectors` | Connecteurs | Sync bidirectionnelle Shopify, WooCommerce, Magento2, BigCommerce, SFCC, SAP Commerce, WiziShop, CDiscount, Fnac, Sylius, Squarespace |
 | `/api/v1/icecat` | Icecat | Enrichissement produit via Icecat |
 | `/api/v1/google` | Google Integration | OAuth Google Drive |
 
@@ -318,7 +319,7 @@ L'application enregistre **55+ groupes de routage** au demarrage. Le fichier `co
 | Prefixe | Module | Description |
 |---------|--------|-------------|
 | `/api/v1/settings` | Settings | Configuration de l'application et email SMTP |
-| `/api/v1/modules` | Modules | Activation/desactivation des modules (public, sans auth) |
+| `/api/v1/modules` | Modules | Gestion des 20 modules (public, sans auth) |
 | `/api/v1/security-dashboard` | Security Dashboard | Tableau de bord securite |
 | `/api/v1/business` | Business | KPIs business et analytics avances |
 
