@@ -93,8 +93,8 @@ docker compose version
 
 ```bash
 # Cloner le repository
-git clone https://github.com/pixeeplay/Suppliers-Import.git
-cd Suppliers-Import
+git clone https://github.com/pixeeplay/ProductsManager-App.git
+cd ProductsManager-App
 
 # Copier le fichier d'environnement
 cp .env.example .env
@@ -107,11 +107,11 @@ nano .env  # ou vim, code, etc.
 
 ```bash
 # Télécharger l'archive
-wget https://github.com/pixeeplay/Suppliers-Import/archive/refs/heads/main.zip
+wget https://github.com/pixeeplay/ProductsManager-App/archive/refs/heads/main.zip
 
 # Extraire
 unzip main.zip
-cd Suppliers-Import-main
+cd ProductsManager-App-main
 
 # Copier le fichier d'environnement
 cp .env.example .env
@@ -128,19 +128,15 @@ cp .env.example .env
 #### 1. Base de Données
 
 ```bash
-# PostgreSQL Configuration
-DB_HOST=postgres
-DB_PORT=5432
-DB_NAME=productsmanager
-DB_USER=productsmanager
-DB_PASSWORD=CHANGEZ_MOI_AVEC_UN_MOT_DE_PASSE_SECURISE
-
-# Multi-DB Architecture (5 databases)
-DB_CATALOG_NAME=catalog_db
-DB_IMPORTS_NAME=imports_db
-DB_MEDIA_NAME=media_db
-DB_CODE2ASIN_NAME=code2asin_db
-DB_ANALYTICS_NAME=analytics_db
+# Architecture Multi-DB (7 bases PostgreSQL)
+DB_CORE_URL=postgresql://user:password@postgres:5432/staging_db_core
+DB_CATALOG_URL=postgresql://user:password@postgres:5432/staging_db_catalog
+DB_IMPORTS_URL=postgresql://user:password@postgres:5432/staging_db_imports
+DB_ANALYTICS_URL=postgresql://user:password@postgres:5432/staging_db_analytics
+DB_MEDIA_URL=postgresql://user:password@postgres:5432/staging_db_media
+DB_CODE2ASIN_URL=postgresql://user:password@postgres:5432/staging_db_code2asin
+DB_SUPPLIERS_URL=postgresql://user:password@postgres:5432/staging_db_suppliers
+DATABASE_URL=${DB_CATALOG_URL}  # compatibilité
 ```
 
 {% callout type="warning" %}
@@ -184,13 +180,49 @@ RATE_LIMIT_AUTH=10/minute
 RATE_LIMIT_IMPORTS=5/minute
 ```
 
+#### 4b. MinIO (Stockage Objets)
+
+```bash
+# MinIO — Staging
+MINIO_ENDPOINT=staging-minio.productsmanager.app
+MINIO_ACCESS_KEY=your-access-key
+MINIO_SECRET_KEY=your-secret-key
+MINIO_SECURE=true
+MINIO_BUCKET=media-images
+
+# MinIO — Production
+# MINIO_ENDPOINT=minio.productsmanager.app
+# MINIO_SECURE=true
+```
+
+#### 4c. Meilisearch (Recherche Full-Text)
+
+```bash
+MEILISEARCH_URL=http://meilisearch:7700
+MEILISEARCH_API_KEY=your-meilisearch-master-key
+```
+
+#### 4d. Qdrant (Recherche Sémantique — Optionnel)
+
+```bash
+QDRANT_URL=http://qdrant:6333
+QDRANT_API_KEY=your-qdrant-api-key
+```
+
 #### 5. IA et Enrichissement (Optionnel)
 
 ```bash
-# OpenAI Configuration (pour enrichissement IA)
+# OpenAI (enrichissement IA + embeddings Qdrant)
 OPENAI_API_KEY=sk-votre_cle_api_openai
-OPENAI_MODEL=gpt-4o
-ENABLE_AI_ENRICHMENT=true
+
+# Anthropic (alternative à OpenAI)
+ANTHROPIC_API_KEY=sk-ant-votre_cle_anthropic
+
+# Perplexity (web enrichment Phase A)
+PERPLEXITY_API_KEY=pplx-votre_cle_perplexity
+
+# SerpAPI (price monitoring + web enrichment Phase B)
+SERPAPI_API_KEY=votre_cle_serpapi
 ```
 
 #### 6. Email (Optionnel)
@@ -234,31 +266,22 @@ productsmanager-worker  Up 30 seconds
 
 ### Initialisation de la Base de Données
 
-```bash
-# Exécuter les migrations
-docker compose exec api python manage.py migrate
+ProductsManager utilise **Alembic** pour les migrations (FastAPI, pas Django). Les migrations s'exécutent automatiquement au démarrage via le service `migrate` (job Docker `restart: "no"`).
 
-# Créer les 5 bases de données spécialisées
-docker compose exec api python manage.py create_multidb
-
-# Créer un super-utilisateur
-docker compose exec api python manage.py createsuperuser
-```
-
-Renseignez :
-
-```text
-Email: admin@productsmanager.app
-Mot de passe: ********
-Confirmation: ********
-```
-
-### Charger les Données de Démo (Optionnel)
+Pour les appliquer manuellement :
 
 ```bash
-# Charger des données d'exemple
-docker compose exec api python manage.py loaddata demo_data.json
+# Appliquer les migrations sur chaque base
+docker compose exec api alembic -x db=core upgrade head
+docker compose exec api alembic -x db=catalog upgrade head
+docker compose exec api alembic -x db=imports upgrade head
+docker compose exec api alembic -x db=analytics upgrade head
+docker compose exec api alembic -x db=media upgrade head
+docker compose exec api alembic -x db=code2asin upgrade head
+docker compose exec api alembic -x db=suppliers upgrade head
 ```
+
+Le premier super-admin est créé via l'API ou directement en base. Utilisez `POST /api/v1/auth/register` pour le premier compte, puis assignez le rôle Admin via `PATCH /api/v1/users/{id}/roles`.
 
 ---
 
@@ -270,8 +293,9 @@ docker compose exec api python manage.py loaddata demo_data.json
 |---------|-----|-------------|
 | **Frontend** | http://localhost:3000 | Interface web principale |
 | **API** | http://localhost:8000/api/v1 | API REST |
-| **API Docs** | http://localhost:8000/docs | Documentation OpenAPI interactive |
-| **Admin Django** | http://localhost:8000/admin | Interface d'administration backend |
+| **API Docs** | http://localhost:8000/docs | Documentation OpenAPI interactive (Swagger UI) |
+| **MinIO Console** | http://localhost:9001 | Interface stockage objets |
+| **Meilisearch** | http://localhost:7700 | Moteur de recherche |
 
 ### Credentials par Défaut
 
@@ -314,15 +338,17 @@ Pour un usage en production, configurez un reverse proxy (Nginx/Traefik) avec HT
 
 ### Base de Données Multi-DB
 
-Products Manager utilise une **architecture multi-DB** pour optimiser les performances :
+Products Manager utilise une **architecture multi-DB** avec 7 bases PostgreSQL :
 
 | Base de Données | Usage | Tables Principales |
 |-----------------|-------|--------------------|
-| **catalog_db** | Catalogue produits | products, suppliers, categories |
-| **imports_db** | Jobs d'import | import_jobs, import_logs, import_errors |
-| **media_db** | Images et fichiers | product_images, files |
-| **code2asin_db** | Mapping codes produits | ean_to_asin, cache_amazon |
-| **analytics_db** | Métriques et rapports | dashboard_metrics, analytics_events |
+| **db_core** | Utilisateurs, auth, paramètres | users, roles, permissions, app_settings, platform_connectors |
+| **db_catalog** | Catalogue produits | products, suppliers, categories, brands, platform_product_mappings |
+| **db_imports** | Jobs d'import | import_jobs, import_configs, import_schedules |
+| **db_analytics** | Métriques et rapports | audit_logs, ai_usage_logs, user_activity |
+| **db_media** | Images et fichiers | media_files |
+| **db_code2asin** | Mapping codes Amazon | code2asin_jobs |
+| **db_suppliers** | Données fournisseurs étendues | scraped_products, scraper_runs |
 
 ---
 
@@ -501,8 +527,9 @@ docker compose exec postgres psql -U productsmanager -d productsmanager
 **Vérifiez les migrations** :
 
 ```bash
-docker compose exec api python manage.py showmigrations
-docker compose exec api python manage.py migrate
+docker compose exec api alembic -x db=core current
+docker compose exec api alembic -x db=catalog current
+docker compose exec api alembic -x db=core upgrade head
 ```
 
 **Vérifiez les variables d'environnement** :
@@ -538,8 +565,7 @@ max_connections = 200
 docker compose down -v
 docker system prune -a --volumes -f
 docker compose up -d
-docker compose exec api python manage.py migrate
-docker compose exec api python manage.py createsuperuser
+# Les migrations s'appliquent automatiquement via le service migrate
 ```
 
 ---
@@ -549,20 +575,20 @@ docker compose exec api python manage.py createsuperuser
 ### Mettre à Jour vers une Nouvelle Version
 
 ```bash
-# Sauvegarder la base de données
-docker compose exec postgres pg_dumpall -U productsmanager > backup_avant_maj.sql
+# 1. Sauvegarder les bases de données
+for db in staging_db_core staging_db_catalog staging_db_imports staging_db_analytics \
+          staging_db_media staging_db_code2asin staging_db_suppliers; do
+  docker compose exec postgres pg_dump -U postgresuser $db > backup_${db}_$(date +%Y%m%d).sql
+done
 
-# Récupérer la dernière version
+# 2. Récupérer la dernière version
 git pull origin main
 
-# Reconstruire les images
+# 3. Reconstruire les images
 docker compose build
 
-# Appliquer les migrations
-docker compose exec api python manage.py migrate
-
-# Redémarrer les services
-docker compose restart
+# 4. Redémarrer (migrations appliquées automatiquement par le service migrate)
+docker compose up -d
 ```
 
 ---
@@ -591,10 +617,17 @@ REDIS_MAXMEMORY_POLICY=allkeys-lru
 
 ### Workers Celery
 
+ProductsManager utilise 4 queues Celery distinctes :
+
 ```bash
-# Nombre de workers selon les CPU
-# 1 worker par CPU core recommandé
-docker compose up -d --scale worker=4
+# Démarrer le worker avec toutes les queues
+celery -A core.celery_app worker -Q default,imports,enrichment,connectors --concurrency=12
+
+# Queues disponibles :
+# default     — tâches générales (sync stats, media, notifications)
+# imports     — pipeline import fichiers
+# enrichment  — AI enrichment, price bot, prompt library
+# connectors  — sync plateformes (push/pull produits, stock, prix)
 ```
 
 ---
@@ -612,5 +645,5 @@ Maintenant que l'installation est complète :
 ## Support
 
 - **Documentation** : https://docs.productsmanager.app
-- **GitHub Issues** : https://github.com/pixeeplay/Suppliers-Import/issues
-- **Email** : hello-pm@pixeeplay.fr
+- **GitHub Issues** : https://github.com/pixeeplay/ProductsManager-App/issues
+- **Email** : webmaster@pixeeplay.com

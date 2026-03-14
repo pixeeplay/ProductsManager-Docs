@@ -131,7 +131,7 @@ La version 4.5 a introduit un systeme de modules activables/desactivables qui co
 | Routes API | Toujours accessibles | Bloquees si module desactive (403) |
 | Configuration | Variables d'environnement | DB + Env + Default (3 niveaux) |
 
-### Les 17 modules
+### Les 20 modules
 
 Chaque fonctionnalite est enregistree comme module dans `api/core/modules.py` :
 
@@ -154,6 +154,9 @@ Chaque fonctionnalite est enregistree comme module dans `api/core/modules.py` :
 | `completeness` | Completude Catalogue | 13 |
 | `search_engine` | Moteur de Recherche | 14 |
 | `price_monitor` | Price Monitor | 15 |
+| `semantic_search` | Recherche Semantique | 16 |
+| `compliance` | Compliance Reglementaire | 17 |
+| `connectors` | Connecteurs Plateformes | 18 |
 
 ### Priorite de configuration (3 niveaux)
 
@@ -276,6 +279,117 @@ docker run --rm -v minio_data:/data -v $(pwd)/backup:/backup alpine \
 {% callout type="danger" title="Test de restauration" %}
 Testez regulierement vos procedures de restauration sur un environnement de staging avant toute migration en production.
 {% /callout %}
+
+---
+
+## Migration v4.5.x vers v4.6.0 : Web Enrichment + Price Bot
+
+### Changements majeurs
+
+- Nouvelle queue Celery `enrichment` (web enrichment, price bot, prompt library)
+- 2 nouvelles tables en db_catalog : `product_web_search_results`, `product_deep_enrichment`, `enrichment_prompts`
+- Nouvelle colonne `auto_align_market_price` dans `products`
+
+### Etapes
+
+```bash
+# 1. Appliquer les migrations catalog
+alembic -x db=catalog upgrade head
+# → migrations 077_add_web_enrichment_tables, 078_add_prompt_library
+
+# 2. Ajouter la queue enrichment au worker Celery
+celery -A core.celery_app worker -Q default,imports,enrichment
+```
+
+### Configuration optionnelle
+
+Ajouter les cles API dans Settings > AI Services :
+- `perplexity` — Perplexity (web search Phase A)
+- `scrapingbee` ou `firecrawl` — scraping web Phase B
+- `serpapi` — deja disponible si Price Monitor active
+
+---
+
+## Migration v4.6.x vers v4.7.0 : Qdrant Semantic Search
+
+### Changements majeurs
+
+- Nouveau service Qdrant (vecteurs, port 6333)
+- Module `semantic_search` (order=16, default_enabled=False)
+- Collection Qdrant `pm_products` creee automatiquement au premier indexage
+
+### Etapes
+
+```bash
+# 1. Demarrer le container Qdrant
+docker-compose -f deploy/staging/docker-compose-qdrant.yml up -d
+
+# 2. Ajouter les variables d'environnement
+QDRANT_URL=http://qdrant:6333
+QDRANT_API_KEY=your-qdrant-api-key
+OPENAI_API_KEY=sk-...   # requis pour les embeddings
+
+# 3. Appliquer migrations (aucune nouvelle migration DB requise)
+# La collection Qdrant est creee automatiquement
+
+# 4. Activer le module dans l'UI : Settings > Modules > Recherche Semantique
+# 5. Lancer la reindexation complete : Settings > Maintenance > Qdrant > Reindexer tout
+```
+
+{% callout type="warning" title="OPENAI_API_KEY obligatoire" %}
+Sans `OPENAI_API_KEY` dans les variables d environnement des containers Celery, l indexation Qdrant echouera silencieusement.
+{% /callout %}
+
+---
+
+## Migration v4.7.x vers v4.8.0 : Compliance Reglementaire
+
+### Changements majeurs
+
+- Nouveau module `compliance` (order=17)
+- Nouvelles colonnes sur les produits : `reach_compliant`, `rohs_compliant`, `ce_marking`, `weee_category`, `carbon_footprint_kg`, `planet_score`
+
+### Etapes
+
+```bash
+# Appliquer les migrations catalog
+alembic -x db=catalog upgrade head
+# → migrations compliance (nouvelles colonnes produits)
+
+# Aucune nouvelle variable d'environnement requise
+```
+
+---
+
+## Migration v4.8.x vers v4.9.0 : Platform Connectors
+
+### Changements majeurs
+
+- Nouveau module `connectors` (order=18)
+- 2 nouvelles tables : `platform_connectors` + `platform_sync_jobs` (db_core)
+- 1 nouvelle table : `platform_product_mappings` (db_catalog)
+- Nouvelle queue Celery `connectors`
+
+### Etapes
+
+```bash
+# 1. Appliquer les migrations
+alembic -x db=core upgrade head     # 011_add_platform_connectors
+alembic -x db=catalog upgrade head  # 082_add_platform_product_mappings
+
+# 2. Ajouter la queue connectors au worker Celery
+celery -A core.celery_app worker -Q default,imports,enrichment,connectors
+
+# 3. Aucune variable d'environnement requise
+#    Les credentials des connecteurs sont configures via l'UI :
+#    Settings > Connecteurs Plateformes
+```
+
+### Securite — Verifications post-migration
+
+- [ ] Les endpoints `/api/v1/connectors/` requierent `MANAGE_SETTINGS` (permission verifiable dans Roles)
+- [ ] Les URLs de connecteurs sont validees SSRF (bloquer les IPs privees)
+- [ ] Les credentials sont chiffres Fernet (verifier que `SECRET_KEY` est configure)
 
 ---
 

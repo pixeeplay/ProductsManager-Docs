@@ -6,23 +6,23 @@ nextjs:
     description: Strategic roadmap for Products Manager in 2026 - Multi-Tenant SaaS, AI Analytics, Enterprise Security, and Mobile Platform
 ---
 
-La roadmap ProductsManager 2026 presente notre vision strategique pour evoluer depuis une plateforme enterprise-ready (v4.5.58, 17 modules, 8 553 tests) vers une solution SaaS complete avec capacites IA, securite enterprise et acces mobile. {% .lead %}
+La roadmap ProductsManager 2026 presente notre vision strategique pour evoluer depuis une plateforme enterprise-ready (v4.9.0, 20 modules, 8 553 tests) vers une solution SaaS complete avec capacites IA, securite enterprise et acces mobile. {% .lead %}
 
-**Current Version:** v4.5.58 (Health Score: 9.5/10 - Grade A+)
-**Document Version:** 1.0
-**Last Updated:** Fevrier 2026
+**Current Version:** v4.9.0 (Audit Score: 8.7/10)
+**Document Version:** 2.0
+**Last Updated:** Mars 2026
 
 ---
 
 ## 2026 Vision
 
 ```
-2026 Q1        2026 Q2        2026 Q3        2026 Q4
+Livré          2026 Q1        2026 Q3        2026 Q4
     |              |              |              |
-  v5.0.0        v5.5.0         v6.0.0         v6.5.0
+  v4.9.0        v5.0.0         v5.5.0         v6.0.0
     |              |              |              |
-Multi-Tenant    AI/ML        Enterprise      Mobile &
-   SaaS       Analytics      Security        Marketplace
+Connecteurs   Multi-Tenant    AI/ML          Enterprise
+Plateformes      SaaS        Analytics       Security
 ```
 
 ---
@@ -31,8 +31,8 @@ Multi-Tenant    AI/ML        Enterprise      Mobile &
 
 Avant de detailler les plans 2026, voici ce qui a ete accompli en 2025 :
 
-{% callout type="success" title="De v3.0.0 a v4.5.58" %}
-ProductsManager a evolue d un simple outil d import produits (score 6.9/10) vers une plateforme enterprise-ready (v4.5.58) avec 17 modules, 8 serveurs MCP, 8 553 tests backend (100%), et 7 bases PostgreSQL.
+{% callout type="success" title="De v3.0.0 a v4.9.0" %}
+ProductsManager a evolue d un simple outil d import produits (score 6.9/10) vers une plateforme enterprise-ready (v4.9.0) avec 20 modules, 8 serveurs MCP, 8 553 tests backend (100%), 7 bases PostgreSQL, et 11 connecteurs plateformes.
 {% /callout %}
 
 ### Accomplissements Cles
@@ -52,6 +52,10 @@ ProductsManager a evolue d un simple outil d import produits (score 6.9/10) vers
 | **Brand Manager** | Harmonisation, aliases, doublons, fusion (v4.5.33) | Qualite catalogue |
 | **Categories Manager** | Gestion taxonomie complete (v4.5.35) | Organisation produits |
 | **8 553 tests backend** | 100% taux de reussite (v4.5.58) | Fiabilite maximale |
+| **Web Enrichment Pipeline** | 3 phases (Perplexity/SerpAPI/Scraping) + Pricing Intelligence + Prompt Library (v4.6.0) | Enrichissement IA complet |
+| **Qdrant Semantic Search** | text-embedding-3-small 512-dim, cosine similarity, module semantic_search (v4.7.0) | Recherche semantique |
+| **Compliance Reglementaire** | REACH/RoHS/CE/WEEE, empreinte carbone, Planet-Score, module compliance (v4.8.0) | Conformite produits |
+| **Platform Connectors** | 11 plateformes e-commerce, bidirectionnel, Fernet, SSRF, module connectors (v4.9.0) | Sync multi-plateforme |
 
 ### Ameliorations Supplementaires
 
@@ -77,11 +81,11 @@ ProductsManager a evolue d un simple outil d import produits (score 6.9/10) vers
 - Sync incremental + full reindex Celery
 - MCP servers migres vers SearchService
 
-### Phase 2 : Recherche Semantique Qdrant (prevue)
+### Phase 2 : Recherche Semantique Qdrant ✅ LIVRE (v4.7.0)
 
-- Qdrant (Rust, vecteurs) pour recherche semantique
-- Embeddings multilingues (sentence-transformers)
-- Use cases : "produits similaires", chat IA, recommandations
+- Qdrant (vecteurs) pour recherche semantique — **LIVRE**
+- Embeddings via OpenAI text-embedding-3-small (512-dim)
+- Use cases : "produits similaires" (section 18 page produit), futur : chat IA, recommandations
 
 ### Phase 3 : Recherche Vocale (future)
 
@@ -91,9 +95,9 @@ ProductsManager a evolue d un simple outil d import produits (score 6.9/10) vers
 
 ---
 
-## Q1 2026: v5.0.0 - Multi-Tenant SaaS Foundation
+## Q3 2026: v5.0.0 - Multi-Tenant SaaS Foundation
 
-**Target Release:** March 2026
+**Target Release:** Q3 2026
 **Theme:** Transform ProductsManager into a SaaS-ready platform
 **Effort Estimate:** 400-500 hours (10-12 weeks)
 
@@ -130,9 +134,9 @@ Flexible pricing to accommodate businesses of all sizes.
 
 ---
 
-## Q2 2026: v5.5.0 - AI & Analytics
+## Q4 2026: v5.5.0 - AI & Analytics
 
-**Target Release:** June 2026
+**Target Release:** Q4 2026
 **Theme:** Leverage AI for intelligent product management
 **Effort Estimate:** 350-400 hours (8-10 weeks)
 
@@ -314,10 +318,18 @@ Full product management capabilities on the go.
 
 | Platform | Priority | Status |
 |----------|----------|--------|
-| Shopify | High | Planned Q4 |
-| WooCommerce | High | Planned Q4 |
-| PrestaShop | High | Planned Q4 |
-| Magento 2 | Medium | Planned Q4 |
+| Shopify | High | ✅ Livré v4.9.0 |
+| WooCommerce | High | ✅ Livré v4.9.0 |
+| PrestaShop | High | ✅ Livré v4.5.x |
+| Magento 2 | Medium | ✅ Livré v4.9.0 |
+| BigCommerce | Medium | ✅ Livré v4.9.0 |
+| SFCC | Medium | ✅ Livré v4.9.0 |
+| SAP Commerce | Medium | ✅ Livré v4.9.0 |
+| WiziShop | Medium | ✅ Livré v4.9.0 |
+| CDiscount | High | ✅ Livré v4.9.0 |
+| Fnac | High | ✅ Livré v4.9.0 |
+| Sylius | Low | ✅ Livré v4.9.0 |
+| Squarespace | Low | ✅ Livré v4.9.0 |
 
 ---
 

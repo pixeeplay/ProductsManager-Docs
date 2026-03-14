@@ -5,7 +5,7 @@ description: Docker, Coolify, environnement et déploiement production
 
 # Déploiement
 
-Le système Suppliers-Import est déployé via **Docker Compose** avec orchestration **Coolify**, permettant des déploiements zero-downtime avec SSL automatique via Let's Encrypt.
+Le système ProductsManager est déployé via **Docker Compose** avec orchestration **Coolify**, permettant des déploiements zero-downtime avec SSL automatique via Let's Encrypt.
 
 {% .lead %}
 
@@ -41,42 +41,66 @@ Les déploiements se font sans interruption de service grâce à Traefik et les 
 
 ```yaml
 services:
-  # Application Backend
+  # Application Backend (8 Uvicorn workers)
   api:
-    image: suppliers-import/api:latest
+    image: productsmanager/api:latest
     ports: 8000
-    depends_on: [postgres, redis, minio]
+    depends_on: [postgres, redis, minio, meilisearch]
 
-  # Application Frontend
+  # Application Frontend (Next.js 15)
   frontend:
-    image: suppliers-import/frontend:latest
+    image: productsmanager/frontend:latest
     ports: 3000
     depends_on: [api]
 
-  # Workers Asynchrones
+  # Workers Asynchrones (12 workers prefork)
   celery:
-    image: suppliers-import/api:latest
-    command: celery -A worker worker
+    image: productsmanager/api:latest
+    command: celery -A core.celery_app worker -Q default,imports,enrichment,connectors --concurrency=12
     depends_on: [redis, postgres]
 
   celery-beat:
-    image: suppliers-import/api:latest
-    command: celery -A worker beat
+    image: productsmanager/api:latest
+    command: celery -A core.celery_app beat --scheduler celery.beat:PersistentScheduler
     depends_on: [redis]
+
+  # Service de migration (s'exécute avant l'API, restart: "no")
+  migrate:
+    image: productsmanager/api:latest
+    command: bash run_migrations.sh
+    restart: "no"
+    depends_on: [postgres]
 
   # Infrastructure
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     volumes: [postgres-data:/var/lib/postgresql/data]
 
   redis:
     image: redis:7-alpine
+    command: redis-server --maxmemory 512m --maxmemory-policy allkeys-lru
     volumes: [redis-data:/data]
 
   minio:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     volumes: [minio-data:/data]
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_API_KEY}
+    volumes: [meilisearch-data:/meili_data]
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports: [6333:6333]
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/localhost/6333'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes: [qdrant-data:/qdrant/storage]
 
   # Reverse Proxy
   traefik:
@@ -233,44 +257,50 @@ services:
 Ne **jamais** commit de secrets en clair. Utiliser Coolify Secrets ou `.env` (gitignored).
 {% /callout %}
 
-#### Bases de Données (5 PostgreSQL)
+#### Bases de Données (7 PostgreSQL 16+)
 
 ```env
-# Base principale (compatibilité)
-DATABASE_URL=postgresql://user:pass@postgres:5432/supplier_import
+# Architecture Multi-DB (7 bases)
+DB_CORE_URL=postgresql://user:pass@postgres:5432/staging_db_core
+DB_CATALOG_URL=postgresql://user:pass@postgres:5432/staging_db_catalog
+DB_IMPORTS_URL=postgresql://user:pass@postgres:5432/staging_db_imports
+DB_ANALYTICS_URL=postgresql://user:pass@postgres:5432/staging_db_analytics
+DB_MEDIA_URL=postgresql://user:pass@postgres:5432/staging_db_media
+DB_CODE2ASIN_URL=postgresql://user:pass@postgres:5432/staging_db_code2asin
+DB_SUPPLIERS_URL=postgresql://user:pass@postgres:5432/staging_db_suppliers
+DATABASE_URL=${DB_CATALOG_URL}  # compatibilité
 
-# Architecture Multi-DB
-DB_CATALOG_URL=postgresql://user:pass@postgres:5432/db_catalog
-DB_IMPORTS_URL=postgresql://user:pass@postgres:5432/db_imports
-DB_MEDIA_URL=postgresql://user:pass@postgres:5432/db_media
-DB_CODE2ASIN_URL=postgresql://user:pass@postgres:5432/db_code2asin
-DB_ANALYTICS_URL=postgresql://user:pass@postgres:5432/db_analytics
-
-# Pools de connexions
-CATALOG_POOL_SIZE=30
-IMPORTS_POOL_SIZE=20
-MEDIA_POOL_SIZE=15
-CODE2ASIN_POOL_SIZE=12
-ANALYTICS_POOL_SIZE=10
-DATABASE_POOL_TIMEOUT=30
-DATABASE_POOL_RECYCLE=3600
+# Pool SQLAlchemy
+DB_POOL_SIZE=5        # par base (5 bases × 8 workers = max 40 connexions/base)
+DB_MAX_OVERFLOW=5
+DB_POOL_RECYCLE=1800  # 30 min
 ```
 
 #### MinIO (Stockage)
 
 ```env
-MINIO_ENDPOINT=minio:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=ChangeThisInProduction123!
-MINIO_SECURE=false  # true en production avec HTTPS
-MINIO_PUBLIC_URL=https://storage.productsmanager.app
+# Production
+MINIO_ENDPOINT=minio.productsmanager.app
+MINIO_ACCESS_KEY=your-access-key
+MINIO_SECRET_KEY=your-secret-key
+MINIO_SECURE=true   # OBLIGATOIRE en production
+MINIO_BUCKET=media-images
 
-# Buckets
-MINIO_CATALOG_BUCKET=catalog-products
-MINIO_IMPORTS_BUCKET=imports-files
-MINIO_MEDIA_BUCKET=media-images
-MINIO_CODE2ASIN_BUCKET=code2asin-results
-MINIO_ANALYTICS_BUCKET=analytics-reports
+# Staging
+# MINIO_ENDPOINT=staging-minio.productsmanager.app
+# MINIO_SECURE=true
+
+# Ne pas utiliser les IPs internes (10.0.7.2 = staging, 10.0.8.2 = prod) !
+```
+
+#### Meilisearch + Qdrant
+
+```env
+MEILISEARCH_URL=http://meilisearch:7700
+MEILISEARCH_API_KEY=your-meilisearch-master-key
+
+QDRANT_URL=http://qdrant:6333
+QDRANT_API_KEY=your-qdrant-api-key
 ```
 
 #### Redis (Cache)
@@ -298,8 +328,8 @@ ALGORITHM=HS256
 
 ```env
 # Environment
-APP_NAME=Supplier Import System
-APP_VERSION=3.2.1
+APP_NAME=ProductsManager
+APP_VERSION=4.9.0
 ENVIRONMENT=production  # production | staging | development
 DEBUG=false
 LOG_LEVEL=INFO
@@ -420,7 +450,7 @@ METRICS_ENABLED=true
 async def health_check():
     return {
         "status": "healthy",
-        "version": "3.2.1",
+        "version": "4.9.0",
         "timestamp": datetime.now().isoformat()
     }
 
@@ -430,7 +460,7 @@ async def multidb_health():
     health_status = {}
 
     # Test each database
-    for db_name in ["catalog", "imports", "media", "code2asin", "analytics"]:
+    for db_name in ["core", "catalog", "imports", "analytics", "media", "code2asin", "suppliers"]:
         try:
             db = get_db_session(db_name)
             await db.execute(text("SELECT 1"))
@@ -777,6 +807,6 @@ docker run --rm -v minio-data:/data -v /backups:/backup alpine \
 - [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)
 - [Traefik Documentation](https://doc.traefik.io/traefik/)
 
-{% callout type="info" title="Production Actuelle" %}
-Déployé sur **Coolify**, **8 containers**, **~3-5 min** par déploiement, **0 downtime**, **SSL automatique Let's Encrypt**
+{% callout type="info" title="Production Actuelle (v4.9.0)" %}
+Déployé sur **Coolify v4** (VPS OVH, 24 vCPU, 96 Go RAM), **12+ containers**, **~3-5 min** par déploiement, **0 downtime**, **SSL automatique Let's Encrypt**. API : 8 Uvicorn workers. Celery : 12 workers prefork sur queues `default,imports,enrichment,connectors`. PostgreSQL 16+ (7 bases). Redis 7 (512m maxmemory allkeys-lru). Qdrant + Meilisearch.
 {% /callout %}

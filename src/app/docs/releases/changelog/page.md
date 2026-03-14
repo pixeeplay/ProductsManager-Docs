@@ -14,6 +14,113 @@ Le format est base sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 
 ## Versions recentes
 
+### [v4.9.0] - 14 Mars 2026
+
+**Connecteurs Plateformes**
+
+- **11 plateformes** : Shopify, WooCommerce, Magento 2, BigCommerce, SFCC, SAP Commerce, WiziShop, CDiscount, Fnac, Sylius, Squarespace
+- Sync bidirectionnel push/pull produits, stock, prix via Celery (queue `connectors`)
+- Webhooks entrants signés : HMAC Shopify/WooCommerce, token BigCommerce, Basic Auth Magento fail-closed
+- Credentials Fernet chiffrés en JSONB, validation SSRF sur tous les champs URL
+- Permission `MANAGE_SETTINGS` requise sur toutes les mutations CRUD
+- Beat schedules : sync stock horaire, sync prix quotidien 3h00
+- OpenAPI export par plateforme : `/api/v1/openapi-export/connectors/{platform_id}`
+- Module `connectors` (order=18, icône Plug)
+- 46 tests unitaires (service + webhooks sécurité)
+
+---
+
+### [v4.8.0] - 14 Mars 2026
+
+**Compliance & Réglementaire**
+
+- `EnvironmentalComplianceService` : REACH, RoHS, CE, WEEE
+- Router `/api/v1/compliance` : stats, produits, export CSV, GET|PATCH environmental
+- Module `compliance` (order=17)
+- Dashboard KPIs réglementaires + table produits filtrable
+- Extension page produit : empreinte carbone, certifications, cycle de vie, Planet-Score
+
+---
+
+### [v4.7.1] - 14 Mars 2026
+
+**Bugfixes**
+
+- Fix Icecat VARCHAR : attribute_name 100→500, attribute_type 50→200, attribute_unit 50→100
+- UX jobs Icecat : boucle infinie useRef corrigée, suppression completed_with_errors, pagination bas
+- Card Meilisearch dans Settings > Maintenance
+- MinIO prod : migration 12 GiB staging→prod, MINIO_ENDPOINT corrigé (`minio.productsmanager.app`)
+- Fix message chemin Qdrant dans SimilarProducts
+
+---
+
+### [v4.7.0] - 14 Mars 2026
+
+**Recherche Sémantique Qdrant**
+
+- `EmbeddingService` : text-embedding-3-small, 512 dimensions, via aiohttp
+- `QdrantSearchService` : cosine similarity, payload indexes (is_active, brand_name)
+- 4 endpoints : semantic, similar, status, reindex
+- 2 tâches Celery : `index_product_qdrant` (max_retries=2) + `full_reindex_qdrant` (batch 50)
+- Module `semantic_search` (order=16, depends_on=search_engine)
+- `SimilarProducts.tsx` : section 18 de la page produit
+- Docker Compose Qdrant staging/prod (healthcheck TCP socket)
+- BuildKit cache mounts frontend : build 9-12 min → 2-3 min
+
+---
+
+### [v4.6.5] - 14 Mars 2026
+
+**Connexion Composants Démo aux APIs Réelles**
+
+- `ExecutiveDashboard` → `/api/v1/business/kpis` (données réelles)
+- `AIInsightWidget` → `/api/v1/business/insights` (insights DB)
+- `PredictiveAnalytics` → `/api/v1/business/analysis` (tendances imports)
+- `RealtimeSync` → `/api/v1/monitoring/realtime-metrics` (psutil polling 5s)
+
+---
+
+### [v4.6.1] - 14 Mars 2026
+
+**Sprint Audit Sécurité — Score 8.3→8.7/10**
+
+- Path traversal File Explorer : defense-in-depth + limite 200MB
+- Injection JSONB Completeness : regex whitelist sur les champs
+- Injection Meilisearch : sanitisation des inputs de recherche
+- SSRF SearXNG Price Monitor : validation `validate_external_url()`
+- SerpAPI : log exposure corrigé
+- Rate limiting Categories sync
+- 3 tests `generate_text_capable` + 6 tests Ollama SSRF mock
+
+---
+
+### [v4.6.0] - 14 Mars 2026
+
+**Web Enrichment + Pricing Intelligence + Prompt Library**
+
+- **Pipeline 3 phases** : Perplexity (web search) → SerpAPI+ScrapingBee (scraping) → IA (synthèse)
+- **Pricing Intelligence** : 5 prix concurrents, prix suggéré (4 stratégies : match_lowest, match_average, offset_fixed, offset_percent), auto-align
+- **Price Bot** : Celery Beat toutes les 4h pour produits avec `auto_align_market_price=True`
+- **Prompt Library** : 20 prompts builtins (descriptions, SEO, FAQ, social, traduction, mapping) + CRUD
+- Celery queue `enrichment` : run_price_bot, run_single_product_pipeline, execute_prompt_on_product
+- 14 nouveaux endpoints sous `/api/v1/enrichment/web/`
+- 31 tests (fixes audit : IDOR, Redis lock, pricing, acks_late, timeout AI)
+
+---
+
+### [v4.5.62] - 11 Mars 2026
+
+**API Enrichissement Bidirectionnel**
+
+- WinDev bidirectionnel : 12 endpoints (GET list/single/inactive + PATCH 75 champs + activate + deactivate + sync + stock + prix + catégories + fournisseurs + status)
+- Export PM→Odoo + PM→PrestaShop (push async + Celery)
+- Rate limiting Redis par clé API (429 + X-RateLimit-* headers)
+- `fire_event()` webhooks sur tous les writes
+- Bugfix structlog event kwarg
+- 40 tests (100% pass)
+
+---
+
 ### [v4.5.58] - 11 Fevrier 2026
 
 **Sprint 9 : 100% Tests Backend**
@@ -525,26 +632,29 @@ Products Manager suit le [Semantic Versioning 2.0.0](https://semver.org/) :
 
 ## Roadmap
 
-### v4.6.0 - Prevue Q1 2026
+### v5.0.0 - Prevue Q3 2026
 
-Fonctionnalites planifiees :
+Multi-Tenant SaaS Foundation :
 
-- [ ] Phase 2 Recherche : Qdrant (recherche semantique)
-- [ ] Frontend Password Reset Page
-- [ ] EAN Lookup provider integration
-- [ ] Import Export Filters UI
-- [ ] Brand Manager: Odoo brand import
+- [ ] Isolation tenant par schema PostgreSQL
+- [ ] Stripe subscriptions (Starter / Professional / Enterprise)
+- [ ] Systeme d invitation equipe
+- [ ] Roles equipe (owner, admin, member, viewer)
 
-### v5.0.0 - Prevue Q2 2026
+### v5.5.0 - Prevue Q4 2026
 
-Breaking changes et refonte majeure :
+AI & Advanced Analytics :
 
-- [ ] Architecture microservices
-- [ ] Event sourcing pour audit complet
-- [ ] Support multi-tenant
-- [ ] API GraphQL native
-- [ ] Interface mobile (iOS/Android)
-- [ ] Internationalisation complete (i18n)
+- [ ] Category prediction model (BERT-based)
+- [ ] Multi-language AI support (FR/EN/DE/ES/IT)
+- [ ] TimescaleDB pour time-series analytics
+- [ ] Real-time analytics dashboard
+
+### Plugins Natifs Plateformes (lot ulterieur)
+
+- [ ] Shopify App (Node.js / Remix)
+- [ ] WooCommerce Plugin (PHP)
+- [ ] Magento 2 Module (PHP)
 
 ---
 
@@ -552,12 +662,14 @@ Breaking changes et refonte majeure :
 
 | Version | Statut | Support jusqu'a | Notes |
 |---------|--------|----------------|-------|
-| **v4.5.58** | Stable | Dec 2026 | Version actuelle |
-| **v4.0.0** | Stable | Dec 2026 | LTS |
-| **v3.3.0** | Obsolete | Mar 2026 | Migrer vers v4.x |
-| **v3.2.0** | Obsolete | Jan 2026 | Migrer vers v4.x |
+| **v4.9.0** | Stable | Dec 2026 | Version actuelle |
+| **v4.8.0** | Stable | Dec 2026 | Compliance |
+| **v4.7.0** | Stable | Dec 2026 | Qdrant |
+| **v4.6.0** | Stable | Dec 2026 | Web Enrichment |
+| **v4.5.58** | Obsolete | Jun 2026 | Migrer vers v4.6+ |
+| **v4.0.0** | LTS | Dec 2026 | LTS (securite uniquement) |
+| **v3.x** | Non supporte | - | Migration obligatoire |
 | **v2.0.0** | Non supporte | - | Migration obligatoire |
-| **v1.x** | Non supporte | - | Migration obligatoire |
 
 ### Politique de support
 
