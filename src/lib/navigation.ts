@@ -157,6 +157,7 @@ export const navigation: NavigationItem[] = [
   {
     title: 'Integrations',
     links: [
+      { title: 'Vue d\'ensemble', href: '/docs/integrations' },
       { title: 'WinDev ERP', href: '/docs/integrations/windev' },
       { title: 'Odoo ERP', href: '/docs/integrations/odoo' },
       { title: 'Amazon PA-API', href: '/docs/integrations/amazon-pa-api' },
@@ -164,6 +165,15 @@ export const navigation: NavigationItem[] = [
       { title: 'Shopify', href: '/docs/integrations/shopify' },
       { title: 'PrestaShop', href: '/docs/integrations/prestashop' },
       { title: 'WooCommerce', href: '/docs/integrations/woocommerce' },
+      { title: 'Magento 2', href: '/docs/integrations/magento2' },
+      { title: 'BigCommerce', href: '/docs/integrations/bigcommerce' },
+      { title: 'Salesforce CC', href: '/docs/integrations/sfcc' },
+      { title: 'SAP Commerce', href: '/docs/integrations/sap-commerce' },
+      { title: 'WiziShop', href: '/docs/integrations/wizishop' },
+      { title: 'CDiscount', href: '/docs/integrations/cdiscount' },
+      { title: 'Fnac Marketplace', href: '/docs/integrations/fnac' },
+      { title: 'Sylius', href: '/docs/integrations/sylius' },
+      { title: 'Squarespace', href: '/docs/integrations/squarespace' },
       { title: 'Email Imports', href: '/docs/integrations/email-imports' },
     ],
   },

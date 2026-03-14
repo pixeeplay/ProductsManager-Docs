@@ -87,12 +87,11 @@ curl https://maboutique.com/wp-json/wc/v3/
 La clé secrète n'est affichée qu'une seule fois. Si vous la perdez, vous devrez en générer une nouvelle.
 {% /callout %}
 
-### 3. Configurer la connexion dans Products Manager
+### 3. Configurer la connexion dans Products Manager (v4.9.0+)
 
 1. Connectez-vous à Products Manager
-2. Allez dans **Paramètres** → **Intégrations**
-3. Cliquez sur **Ajouter une intégration**
-4. Sélectionnez **WooCommerce**
+2. Allez dans **Paramètres → Connecteurs Plateformes → WooCommerce**
+3. Cliquez sur **Ajouter une connexion**
 
 Remplissez le formulaire :
 
@@ -300,10 +299,10 @@ Products Manager enregistre automatiquement les webhooks suivants lors de la con
 
 | Webhook Topic | URL | Action |
 |--------------|-----|--------|
-| `product.created` | `/api/v1/webhooks/woocommerce/products/create` | Importe nouveau produit |
-| `product.updated` | `/api/v1/webhooks/woocommerce/products/update` | Met à jour produit |
-| `product.deleted` | `/api/v1/webhooks/woocommerce/products/delete` | Archive produit |
-| `product.restored` | `/api/v1/webhooks/woocommerce/products/restore` | Restaure produit |
+| `product.created` | `/api/v1/connectors/woocommerce/webhook` | Importe nouveau produit |
+| `product.updated` | `/api/v1/connectors/woocommerce/webhook` | Met à jour produit |
+| `product.deleted` | `/api/v1/connectors/woocommerce/webhook` | Archive produit |
+| `product.restored` | `/api/v1/connectors/woocommerce/webhook` | Restaure produit |
 
 ### Configuration manuelle des webhooks
 
@@ -315,7 +314,7 @@ Si les webhooks ne sont pas créés automatiquement :
    - **Nom** : `Products Manager - Product Created`
    - **Statut** : ✅ Actif
    - **Sujet** : `Product created`
-   - **URL de livraison** : `https://votre-pm.com/api/v1/webhooks/woocommerce/products/create`
+   - **URL de livraison** : `https://votre-pm.com/api/v1/connectors/woocommerce/webhook`
    - **Secret** : (généré automatiquement, copiez-le dans Products Manager)
    - **Version API** : WP REST API Integration v3
 4. Répétez pour `product.updated`, `product.deleted`, `product.restored`
@@ -410,7 +409,7 @@ curl -X GET "https://maboutique.com/wp-json/wc/v3/webhooks" \
   -u "ck_xxxxx:cs_xxxxx"
 
 # Testez manuellement un webhook
-curl -X POST https://votre-pm.com/api/v1/webhooks/woocommerce/products/create \
+curl -X POST https://votre-pm.com/api/v1/connectors/woocommerce/webhook \
   -H "Content-Type: application/json" \
   -H "X-WC-Webhook-Signature: test" \
   -d '{"id": 123, "name": "Test Product"}'

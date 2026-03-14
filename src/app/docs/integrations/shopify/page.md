@@ -68,16 +68,26 @@ Products Manager utilise le processus d'installation OAuth de Shopify pour une c
 4. Cliquez sur **Ajouter l'application**
 5. Suivez le processus d'installation OAuth
 
-**Méthode 2 : Via Products Manager**
+**Méthode 2 : Via Products Manager (v4.9.0+)**
 
 1. Connectez-vous à Products Manager
-2. Allez dans **Paramètres** → **Intégrations**
-3. Cliquez sur **Ajouter une intégration**
-4. Sélectionnez **Shopify**
-5. Entrez le nom de votre boutique : `maboutique.myshopify.com`
-6. Cliquez sur **Connecter à Shopify**
-7. Vous serez redirigé vers Shopify pour autoriser l'application
-8. Cliquez sur **Installer l'application**
+2. Allez dans **Paramètres → Connecteurs Plateformes → Shopify**
+3. Cliquez sur **Ajouter une connexion**
+4. Renseignez la configuration :
+
+```json
+{
+  "platform_id": "shopify",
+  "name": "Shopify Production",
+  "credentials": {
+    "shop_url": "https://maboutique.myshopify.com",
+    "access_token": "shpat_xxxxxxxxxxxxx",
+    "webhook_secret": "votre_secret_webhook"
+  }
+}
+```
+
+5. Cliquez sur **Tester la connexion** puis **Enregistrer**
 
 ### 2. Générer un Access Token personnalisé (Optionnel)
 
@@ -305,12 +315,12 @@ Products Manager enregistre automatiquement les webhooks suivants lors de l'inst
 
 | Webhook Topic | URL | Action |
 |--------------|-----|--------|
-| `products/create` | `/api/v1/webhooks/shopify/products/create` | Importe nouveau produit |
-| `products/update` | `/api/v1/webhooks/shopify/products/update` | Met à jour produit existant |
-| `products/delete` | `/api/v1/webhooks/shopify/products/delete` | Archive produit |
-| `inventory_levels/update` | `/api/v1/webhooks/shopify/inventory/update` | Met à jour stock |
-| `collections/create` | `/api/v1/webhooks/shopify/collections/create` | Crée catégorie |
-| `collections/update` | `/api/v1/webhooks/shopify/collections/update` | Met à jour catégorie |
+| `products/create` | `/api/v1/connectors/shopify/webhook` | Importe nouveau produit |
+| `products/update` | `/api/v1/connectors/shopify/webhook` | Met à jour produit existant |
+| `products/delete` | `/api/v1/connectors/shopify/webhook` | Archive produit |
+| `inventory_levels/update` | `/api/v1/connectors/shopify/webhook` | Met à jour stock |
+| `collections/create` | `/api/v1/connectors/shopify/webhook` | Crée catégorie |
+| `collections/update` | `/api/v1/connectors/shopify/webhook` | Met à jour catégorie |
 
 ### Sécurité des webhooks
 
